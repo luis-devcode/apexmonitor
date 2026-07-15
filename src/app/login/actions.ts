@@ -23,12 +23,27 @@ export async function loginAction(
   redirect("/");
 }
 
-/** Primeiro acesso: cria a conta de administrador (só funciona se não houver usuários). */
+/**
+ * Primeiro acesso: cria a conta de administrador. Só funciona se não houver
+ * nenhum usuário AINDA e — em produção — se quem preencher souber o token de
+ * instalação (ADMIN_SETUP_TOKEN no .env do servidor). Sem isso, o primeiro
+ * estranho a abrir o site num banco vazio viraria dono. Falha fechada.
+ */
 export async function criarAdminAction(
   _prev: string | undefined,
   formData: FormData,
 ): Promise<string | undefined> {
   if (!(await semUsuarios())) return "Já existe uma conta. Faça login.";
+
+  // Trava de instalação. Em produção o token é obrigatório; em dev, se não houver
+  // token configurado, liberamos por conveniência.
+  const setupToken = process.env.ADMIN_SETUP_TOKEN?.trim();
+  const tokenInformado = String(formData.get("token") ?? "").trim();
+  if (setupToken) {
+    if (tokenInformado !== setupToken) return "Token de instalação inválido.";
+  } else if (process.env.NODE_ENV === "production") {
+    return "Instalação bloqueada. Configure ADMIN_SETUP_TOKEN no servidor.";
+  }
 
   const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();

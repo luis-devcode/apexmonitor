@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/auth";
+import { encryptSecret } from "@/lib/crypto";
 import { canonicalHouseName, normHouse } from "@/lib/houses";
 import { readCloneGroups } from "@/lib/odds-feed";
 import { prisma } from "@/lib/prisma";
@@ -51,7 +52,8 @@ export async function addContaParceiroAction(
   if (existing) return `${parceiro.nome} já tem conta na ${casa.nome}.`;
 
   const conta = await prisma.conta.create({
-    data: { userId, casaId: casa.id, parceiroId, saldo: saldoInicial, status, login, senha, notas },
+    // A senha vai criptografada pro banco (LGPD). É descriptografada só na leitura.
+    data: { userId, casaId: casa.id, parceiroId, saldo: saldoInicial, status, login, senha: senha ? encryptSecret(senha) : null, notas },
   });
   if (saldoInicial !== 0) {
     await prisma.movimento.create({
@@ -79,7 +81,7 @@ export async function updateContaCampoAction(id: string, field: string, value: s
   const v = field === "senha" ? (value === "" ? null : value) : (value.trim() || null);
   const data: { login?: string | null; senha?: string | null; notas?: string | null } = {};
   if (field === "login") data.login = v;
-  else if (field === "senha") data.senha = v;
+  else if (field === "senha") data.senha = v ? encryptSecret(v) : null;
   else if (field === "notas") data.notas = v;
   else return;
   await prisma.conta.updateMany({ where: { id, userId }, data });

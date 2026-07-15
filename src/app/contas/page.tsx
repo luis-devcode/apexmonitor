@@ -1,5 +1,6 @@
 import AppShell from "@/components/AppShell";
 import { requireUserId } from "@/lib/auth";
+import { decryptSecret } from "@/lib/crypto";
 import { houseLogoMap, housesForSelect, logoForHouse } from "@/lib/houses";
 import { readCloneGroups } from "@/lib/odds-feed";
 import { prisma } from "@/lib/prisma";
@@ -30,7 +31,8 @@ export default async function ContasPage() {
     saldo: conta.saldo,
     status: conta.status,
     login: conta.login,
-    senha: conta.senha,
+    // Descriptografa só aqui, pra mostrar ao dono. No banco fica cifrada.
+    senha: decryptSecret(conta.senha),
     notas: conta.notas,
     podeExcluir: conta._count.movimentos === 0 && conta._count.pernas === 0,
   }));

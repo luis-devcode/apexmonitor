@@ -94,6 +94,14 @@ export default function LoginForm({ primeiroAcesso }: { primeiroAcesso: boolean 
               </div>
             </label>
 
+            {primeiroAcesso && (
+              <label className="block space-y-1.5">
+                <span className="mono-label text-muted">Token de instalação</span>
+                <input name="token" placeholder="Definido no servidor (ADMIN_SETUP_TOKEN)" className={inputClass} autoComplete="off" spellCheck={false} />
+                <span className="block text-[10px] leading-relaxed text-muted">Trava de segurança: só quem tem o token do servidor cria o primeiro administrador.</span>
+              </label>
+            )}
+
             {error && (
               <p className="rounded-xl bg-negative/10 px-3.5 py-2.5 text-xs font-semibold text-negative" aria-live="polite">{error}</p>
             )}
