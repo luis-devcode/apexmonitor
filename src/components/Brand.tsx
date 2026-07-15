@@ -8,9 +8,10 @@ import type { ReactNode } from "react";
 export function BrandMark({ className = "h-9 w-9" }: { className?: string }) {
   return (
     <span className={`brand-mark relative grid ${className} shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-accent via-[#2f6fe7] to-accent-deep text-white`}>
-      <svg viewBox="0 0 24 24" className="h-[58%] w-[58%]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" aria-hidden="true">
-        <path d="m12 3 7 4v8l-7 4-7-4V7l7-4Z" />
-        <path d="m8.5 9 3.5-2 3.5 2v4L12 15l-3.5-2V9Z" />
+      {/* Marca ApexMonitor: o pico (apex) atravessado por um pulso de sinal (monitor). */}
+      <svg viewBox="0 0 48 48" className="h-[66%] w-[66%]" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M11 34 L24 14 L37 34" />
+        <path d="M15 30 L20 30 L23 24.5 L27 33 L30 29 L35 29" strokeWidth="2.8" />
       </svg>
       <span className="absolute inset-x-1 bottom-0 h-px bg-white/50" />
     </span>
