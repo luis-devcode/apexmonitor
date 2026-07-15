@@ -1,0 +1,276 @@
+// Central de Odds — gestão financeira operacional.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// Acesso: usuário do produto (multi-login) + sessão + controle de assinatura.
+// A senha NUNCA é guardada — só o hash (scrypt com salt).
+// ---------------------------------------------------------------------------
+
+// role: ADMIN | CLIENTE
+// status: ATIVO | BLOQUEADO
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  senhaHash    String
+  nome         String
+  role         String    @default("CLIENTE")
+  status       String    @default("ATIVO")
+  // Assinatura mensal: enquanto `assinaturaAte` for no futuro, o acesso é liberado.
+  assinaturaAte DateTime?
+  plano        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+
+  // Todos os dados do produto pertencem a um usuário (isolamento multi-tenant).
+  parceiros    Parceiro[]
+  casas        Casa[]
+  contas       Conta[]
+  movimentos   Movimento[]
+  operacoes    Operacao[]
+  pernas       PernaOperacao[]
+  freebets     Freebet[]
+  custos       Custo[]
+  chatMensagens ChatMensagem[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  // Guardamos o HASH do token, não o token — se o banco vazar, as sessões não servem.
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Parceiro {
+  id           String     @id @default(cuid())
+  nome         String
+  documento    String?
+  email        String?
+  custoValor   Float      @default(0)
+  custoPeriodo String?
+  ativo        Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contas       Conta[]
+  operacoes    Operacao[]
+  freebets     Freebet[]
+
+  @@index([userId])
+}
+
+model Casa {
+  id          String    @id @default(cuid())
+  nome        String
+  comissaoPct Float     @default(0)
+  logoUrl     String?
+  ativo       Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contas      Conta[]
+  freebets    Freebet[]
+
+  @@unique([userId, nome])
+  @@index([userId])
+}
+
+// Saldo disponível numa casa (o valor em apostas pendentes fica nas pernas).
+model Conta {
+  id         String           @id @default(cuid())
+  casaId     String
+  casa       Casa             @relation(fields: [casaId], references: [id], onDelete: Cascade)
+  parceiroId String?
+  parceiro   Parceiro?        @relation(fields: [parceiroId], references: [id], onDelete: SetNull)
+  saldo      Float            @default(0)
+  status     String           @default("disponivel")
+  login      String?
+  senha      String?
+  notas      String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movimentos Movimento[]
+  pernas     PernaOperacao[]
+
+  @@unique([casaId, parceiroId])
+  @@index([userId])
+}
+
+// tipo: DEPOSITO | SAQUE | TRANSFERENCIA | AJUSTE | APOSTA | RETORNO
+model Movimento {
+  id         String    @id @default(cuid())
+  contaId    String
+  conta      Conta     @relation(fields: [contaId], references: [id], onDelete: Cascade)
+  tipo       String
+  valor      Float
+  descricao  String?
+  transferId String?
+  operacaoId String?
+  operacao   Operacao? @relation(fields: [operacaoId], references: [id], onDelete: SetNull)
+  data       DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([operacaoId])
+  @@index([userId])
+}
+
+// tipo: SUREBET | FREEBET | SUPERODD | VALUEBET | OUTRO
+// status: PENDENTE | FINALIZADA | ANULADA
+model Operacao {
+  id            String           @id @default(cuid())
+  tipo          String
+  // Pra que a operação servia (ver src/lib/procedimentos.ts). O `tipo` acima é
+  // só o balde grosso; é aqui que fica "Extração freebet", "Duplo green", etc.
+  procedimento  String?
+  evento        String
+  esporte       String?
+  // Data/hora do jogo ou evento. O dia financeiro da operação é `createdAt`.
+  data          DateTime         @default(now())
+  stakeTotal    Float
+  lucroEsperado Float            @default(0)
+  lucroReal     Float?
+  status        String           @default("PENDENTE")
+  parceiroId    String?
+  parceiro      Parceiro?        @relation(fields: [parceiroId], references: [id], onDelete: SetNull)
+  casas         String?
+  notas         String?
+  liquidadaEm   DateTime?
+  // Momento em que a operação foi registrada: define calendário, numeração e lucro diário.
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pernas        PernaOperacao[]
+  movimentos    Movimento[]
+  freebets      Freebet[]      @relation("FreebetOrigem")
+  freebetsUsadas Freebet[]     @relation("FreebetUso")
+
+  @@index([userId])
+}
+
+// Uma aposta/perna da operação em uma conta específica.
+// resultado: PENDENTE | GREEN | RED | ANULADA
+model PernaOperacao {
+  id         String    @id @default(cuid())
+  operacaoId String
+  operacao   Operacao  @relation(fields: [operacaoId], references: [id], onDelete: Cascade)
+  casa       String?
+  contaId    String?
+  conta      Conta?    @relation(fields: [contaId], references: [id], onDelete: SetNull)
+  selecao    String
+  odd        Float
+  // Aposta a favor. Numa perna LAY isto NÃO é o que se arrisca — o risco é a
+  // responsabilidade: stake * (odd - 1). Por isso guardamos os dois.
+  stake      Float
+  isLay      Boolean   @default(false)
+  // Comissão da casa/exchange (%). Sai do lucro no fechamento — sem ela o lay
+  // fecha com lucro maior do que o real.
+  comissaoPct Float    @default(0)
+  freebet    Boolean   @default(false)
+  risco      Float     @default(0)
+  resultado  String    @default("PENDENTE")
+  retorno    Float?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([operacaoId])
+  @@index([contaId])
+  @@index([userId])
+}
+
+// status: PENDENTE | EXTRAIDA | EXPIRADA
+model Freebet {
+  id            String    @id @default(cuid())
+  casaId        String?
+  casa          Casa?     @relation(fields: [casaId], references: [id], onDelete: SetNull)
+  parceiroId    String?
+  parceiro      Parceiro? @relation(fields: [parceiroId], references: [id], onDelete: SetNull)
+  valor         Float
+  tipo          String?
+  procedimento  String?
+  requisito     String?
+  status        String    @default("PENDENTE")
+  valorExtraido Float?
+  expiraEm      DateTime?
+  notas         String?
+  // De qual operação essa freebet NASCEU (quando veio de uma qualificadora).
+  operacaoId    String?
+  operacao      Operacao? @relation("FreebetOrigem", fields: [operacaoId], references: [id], onDelete: SetNull)
+  // Em qual operação essa freebet foi EXTRAÍDA (virou dinheiro).
+  usoOperacaoId String?
+  usoOperacao   Operacao? @relation("FreebetUso", fields: [usoOperacaoId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([operacaoId])
+  @@index([usoOperacaoId])
+}
+
+
+// Tudo que a operação CUSTA: mensalidade do monitor, planilha, VPN, o que for.
+// O pagamento dos CPFs NÃO entra aqui — ele já vive no Parceiro (custoValor);
+// a tela de Custos junta os dois pra mostrar o custo real do mês.
+//
+// categoria: FERRAMENTA | ASSINATURA | INFRA | TAXA | OUTRO
+// periodo:   MES | SEMANA | ANO
+model Custo {
+  id            String   @id @default(cuid())
+  descricao     String
+  categoria     String   @default("OUTRO")
+  valor         Float
+  periodo       String   @default("MES")
+  // Dia do mês em que vence (1-31). Serve pro aviso de vencimento.
+  diaVencimento Int?
+  ativo         Boolean  @default(true)
+  notas         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Comunidade: um chat só, para todos os membros conversarem sobre tudo. É o
+// único lugar do produto que NÃO é isolado por usuário — todo mundo vê tudo.
+//
+// status: nulo numa conversa normal. Quando a mensagem é um relato de problema,
+//         entra a fila de correção — ABERTO | EM_ANALISE | RESOLVIDO.
+model ChatMensagem {
+  id          String          @id @default(cuid())
+  conteudo    String
+  status      String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  authorId    String
+  author      User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  respostaAId String?
+  respostaA   ChatMensagem?   @relation("ChatRespostas", fields: [respostaAId], references: [id], onDelete: SetNull)
+  respostas   ChatMensagem[]  @relation("ChatRespostas")
+
+  @@index([createdAt])
+  @@index([authorId])
+  @@index([respostaAId])
+}
