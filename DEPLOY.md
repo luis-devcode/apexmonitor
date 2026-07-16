@@ -256,7 +256,13 @@ Abra `https://apexmonitor.com.br/login`. Como o banco está vazio, aparece o
 
 ## Pós-lançamento
 
-- **Backup diário do Postgres** (cron com `pg_dump`).
+- **Backup diário do Postgres** — ✅ feito: `apexmonitor-backup.timer` roda 03:30,
+  guarda 14 dias em `/var/backups/apexmonitor`, e não apaga os antigos se o dump
+  do dia sair vazio.
+  > ⚠️ **Mora no mesmo servidor.** Protege de "apaguei sem querer", **não** de
+  > "o servidor morreu" — que é justamente o caso em que se precisa de backup.
+  > **Antes do primeiro cliente pagante**, mandar a cópia para fora da máquina
+  > (backup pago da Hetzner, um bucket, ou `scp` para outro lugar).
 - **Nunca** exponha o repositório publicamente (a pasta `integrations/monitorodds`
   revela a fonte dos dados).
 - **Troque as senhas compartilhadas** do MonitorOdds.
