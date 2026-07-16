@@ -3,19 +3,28 @@ import { requireUserId } from "@/lib/auth";
 import { houseLogoMap, housesForSelect, logoForHouse } from "@/lib/houses";
 import { readCloneGroups } from "@/lib/odds-feed";
 import { prisma } from "@/lib/prisma";
+import { procedimentoLabel } from "@/lib/procedimentos";
 import FreebetsWorkspace from "./FreebetsWorkspace";
 
 export const dynamic = "force-dynamic";
 
 export default async function FreebetsPage() {
   const userId = await requireUserId();
-  const [freebetsRaw, parceiros, cloneGroups] = await Promise.all([
-    prisma.freebet.findMany({ where: { userId }, include: { casa: true, parceiro: true }, orderBy: { createdAt: "desc" } }),
+  const [freebetsRaw, parceiros, cloneGroups, operacoesRaw] = await Promise.all([
+    prisma.freebet.findMany({
+      where: { userId },
+      // `operacao` = de qual operação a freebet nasceu (data, jogo, procedimento).
+      include: { casa: true, parceiro: true, operacao: true },
+      orderBy: { createdAt: "desc" },
+    }),
     prisma.parceiro.findMany({ where: { userId, ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
     readCloneGroups(),
+    // Só os ids/datas: serve pra numerar as operações igual à planilha (nº 1 = a mais antiga).
+    prisma.operacao.findMany({ where: { userId }, select: { id: true, createdAt: true }, orderBy: { createdAt: "asc" } }),
   ]);
 
   const cloneLogo = houseLogoMap(cloneGroups);
+  const numeroDaOperacao = new Map(operacoesRaw.map((o, i) => [o.id, i + 1]));
 
   const freebets = freebetsRaw.map((f) => ({
     id: f.id,
@@ -31,6 +40,16 @@ export default async function FreebetsPage() {
     valorExtraido: f.valorExtraido,
     expiraEm: f.expiraEm ? f.expiraEm.toISOString() : null,
     notas: f.notas,
+    // A operação que gerou a freebet (null quando foi cadastrada na mão).
+    origem: f.operacao
+      ? {
+          numero: numeroDaOperacao.get(f.operacao.id) ?? 0,
+          evento: f.operacao.evento,
+          // O dia financeiro da operação é o createdAt (quando foi registrada).
+          data: f.operacao.createdAt.toISOString(),
+          procedimento: procedimentoLabel(f.operacao.procedimento) ?? f.operacao.tipo,
+        }
+      : null,
   }));
 
   const houses = housesForSelect(cloneGroups);

@@ -22,6 +22,8 @@ type Freebet = {
   valorExtraido: number | null;
   expiraEm: string | null;
   notas: string | null;
+  /** A operação que gerou a freebet. Null quando ela foi cadastrada na mão. */
+  origem: { numero: number; evento: string; data: string; procedimento: string } | null;
 };
 type ParceiroOption = { id: string; nome: string };
 type HouseOption = { name: string; logoUrl: string | null };
@@ -44,9 +46,34 @@ const STATUS_META: Record<string, { label: string; dot: string; pill: string }> 
   EXPIRADA: { label: "Expirada", dot: "bg-negative", pill: "bg-negative/10 text-negative" },
 };
 const DAY = 86_400_000;
+const APP_TIME_ZONE = "America/Sao_Paulo";
+const todayFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: APP_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function dateOnlyParts(iso: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!match) return null;
+  return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
+}
+
+function todayParts() {
+  const parts = todayFormatter.formatToParts(new Date());
+  const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value);
+  return { year: value("year"), month: value("month"), day: value("day") };
+}
+
+function dayIndex(parts: { year: number; month: number; day: number }) {
+  return Date.UTC(parts.year, parts.month - 1, parts.day) / DAY;
+}
 
 function diasAteExpirar(iso: string) {
-  return Math.ceil((Date.parse(iso) - Date.now()) / DAY);
+  const expiration = dateOnlyParts(iso);
+  if (!expiration) return Number.POSITIVE_INFINITY;
+  return dayIndex(expiration) - dayIndex(todayParts());
 }
 
 function freebetUrgente(freebet: Freebet) {
@@ -57,9 +84,10 @@ function freebetUrgente(freebet: Freebet) {
 
 function validadeInfo(iso: string | null, status: string) {
   if (!iso) return null;
-  const date = new Date(iso);
-  const label = date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const days = Math.ceil((date.getTime() - Date.now()) / DAY);
+  const parts = dateOnlyParts(iso);
+  if (!parts) return null;
+  const label = `${String(parts.day).padStart(2, "0")}/${String(parts.month).padStart(2, "0")}/${parts.year}`;
+  const days = diasAteExpirar(iso);
   let tone = "";
   let hint = label;
   if (status === "PENDENTE") {
@@ -93,6 +121,7 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
     const comValor = extraidas.filter((f) => f.valorExtraido != null && f.valor > 0);
     const urgentes = pendentes.filter(freebetUrgente);
     const vencidasPendentes = urgentes.filter((f) => f.expiraEm && diasAteExpirar(f.expiraEm) < 0);
+    const vencemHoje = urgentes.filter((f) => f.expiraEm && diasAteExpirar(f.expiraEm) === 0);
     return {
       ativasValor: pendentes.reduce((s, f) => s + f.valor, 0),
       disponiveis: pendentes.length,
@@ -103,6 +132,7 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
       expiradas: freebets.filter((f) => f.status === "EXPIRADA").length,
       urgentes: urgentes.length,
       vencidasPendentes: vencidasPendentes.length,
+      vencemHoje: vencemHoje.length,
       aVencer: urgentes.length - vencidasPendentes.length,
     };
   }, [freebets]);
@@ -157,22 +187,28 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
       {alertas.length > 0 && (
         <section
           role="alert"
-          className={`overflow-hidden rounded-2xl border ${stats.vencidasPendentes > 0 ? "border-negative/40 bg-negative/[0.07]" : "border-warning/40 bg-warning/[0.07]"}`}
+          className={`overflow-hidden rounded-2xl border ${stats.vencemHoje > 0 ? "border-warning/60 bg-warning/[0.09] shadow-[0_0_32px_rgba(245,158,11,0.08)]" : stats.vencidasPendentes > 0 ? "border-negative/40 bg-negative/[0.07]" : "border-warning/40 bg-warning/[0.07]"}`}
         >
           <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
-            <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${stats.vencidasPendentes > 0 ? "bg-negative/15 text-negative" : "bg-warning/15 text-warning"}`}>
+            <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${stats.vencemHoje > 0 ? "bg-warning/20 text-warning ring-1 ring-warning/30" : stats.vencidasPendentes > 0 ? "bg-negative/15 text-negative" : "bg-warning/15 text-warning"}`}>
               <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 9v4m0 4h.01M10.3 3.7 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z" />
               </svg>
             </span>
             <div className="min-w-0 flex-1">
-              <h2 className={`text-sm font-black ${stats.vencidasPendentes > 0 ? "text-negative" : "text-warning"}`}>
-                {stats.vencidasPendentes > 0
+              <h2 className={`text-sm font-black ${stats.vencemHoje > 0 ? "text-warning" : stats.vencidasPendentes > 0 ? "text-negative" : "text-warning"}`}>
+                {stats.vencemHoje > 0
+                  ? `${stats.vencemHoje} ${stats.vencemHoje === 1 ? "freebet vence" : "freebets vencem"} hoje`
+                  : stats.vencidasPendentes > 0
                   ? `${stats.vencidasPendentes} ${stats.vencidasPendentes === 1 ? "freebet venceu" : "freebets venceram"} sem extração`
                   : `${stats.aVencer} ${stats.aVencer === 1 ? "freebet vence" : "freebets vencem"} nos próximos 3 dias`}
               </h2>
               <p className="mt-1 text-xs text-text-2">
-                {stats.vencidasPendentes > 0 && stats.aVencer > 0
+                {stats.vencemHoje > 0 && stats.vencidasPendentes > 0
+                  ? `Use as que vencem hoje antes do fim do dia. Há também ${stats.vencidasPendentes} ${stats.vencidasPendentes === 1 ? "freebet com validade vencida" : "freebets com validade vencida"}.`
+                  : stats.vencemHoje > 0
+                    ? "Prioridade máxima: use ou extraia essas freebets antes do fim do dia."
+                    : stats.vencidasPendentes > 0 && stats.aVencer > 0
                   ? `Além das vencidas, ${stats.aVencer} ainda ${stats.aVencer === 1 ? "vence" : "vencem"} em até 3 dias. Extraia ou atualize o status para não perder o controle.`
                   : stats.vencidasPendentes > 0
                     ? "Atualize o status dessas freebets e confirme se o benefício ainda pode ser utilizado."
@@ -196,7 +232,7 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
             <button
               type="button"
               onClick={() => { setTab("URGENTE"); setFiltroCasa(""); setFiltroParceiro(""); }}
-              className={`h-10 shrink-0 rounded-xl px-4 text-xs font-black transition ${stats.vencidasPendentes > 0 ? "bg-negative text-white hover:brightness-110" : "bg-warning text-black hover:brightness-110"}`}
+              className={`h-10 shrink-0 rounded-xl px-4 text-xs font-black transition ${stats.vencemHoje > 0 ? "bg-warning text-black shadow-[0_8px_24px_rgba(245,158,11,0.2)] hover:brightness-110" : stats.vencidasPendentes > 0 ? "bg-negative text-white hover:brightness-110" : "bg-warning text-black hover:brightness-110"}`}
             >
               Ver urgentes
             </button>
@@ -216,7 +252,7 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
           label="A vencer (3 dias)"
           value={String(stats.aVencer)}
           tone={stats.urgentes > 0 ? "warning" : "positive"}
-          detail={stats.vencidasPendentes > 0 ? `${stats.vencidasPendentes} vencidas pendentes` : "Freebets a extrair logo"}
+          detail={stats.vencemHoje > 0 ? `${stats.vencemHoje} ${stats.vencemHoje === 1 ? "vence" : "vencem"} hoje` : stats.vencidasPendentes > 0 ? `${stats.vencidasPendentes} vencidas pendentes` : "Freebets a extrair logo"}
         />
       </section>
 
@@ -269,8 +305,20 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
 
 function FreebetCard({ freebet, onEditar }: { freebet: Freebet; onEditar: (f: Freebet) => void }) {
   const validade = validadeInfo(freebet.expiraEm, freebet.status);
+  const dias = freebet.status === "PENDENTE" && freebet.expiraEm ? diasAteExpirar(freebet.expiraEm) : null;
+  const venceHoje = dias === 0;
+  const venceLogo = dias !== null && dias > 0 && dias <= 3;
+  const validadeVencida = dias !== null && dias < 0;
+  const cardTone = venceHoje
+    ? "border-warning/70 bg-warning/[0.055] shadow-[0_0_0_1px_rgba(245,158,11,0.14),0_14px_38px_rgba(245,158,11,0.08)] hover:border-warning"
+    : validadeVencida
+      ? "border-negative/45 bg-negative/[0.035] hover:border-negative/70"
+      : venceLogo
+        ? "border-warning/35 bg-warning/[0.025] hover:border-warning/60"
+        : "border-border bg-surface hover:border-border-strong";
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-colors hover:border-border-strong">
+    <article className={`relative flex flex-col overflow-hidden rounded-2xl border transition-colors ${cardTone}`}>
+      {venceHoje && <span className="absolute inset-x-0 top-0 h-0.5 bg-warning shadow-[0_0_12px_var(--warning)]" />}
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         <span className="inline-flex min-w-0 items-center gap-1.5 rounded-md bg-surface-2 px-2 py-1">
           {freebet.casaLogo ? (
@@ -283,20 +331,47 @@ function FreebetCard({ freebet, onEditar }: { freebet: Freebet; onEditar: (f: Fr
         <FreebetStatus key={`${freebet.id}-${freebet.status}`} id={freebet.id} value={freebet.status} className="ml-auto" />
       </div>
 
+      {(venceHoje || venceLogo || validadeVencida) && (
+        <div className={`flex items-center gap-2 border-b px-4 py-2 ${venceHoje ? "border-warning/25 bg-warning/10 text-warning" : validadeVencida ? "border-negative/20 bg-negative/[0.07] text-negative" : "border-warning/15 bg-warning/[0.055] text-warning"}`}>
+          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 1.5M9 2h6M12 2v3" />
+          </svg>
+          <span className="text-[10px] font-black uppercase tracking-[0.12em]">
+            {venceHoje ? "Vence hoje" : validadeVencida ? "Validade vencida" : dias === 1 ? "Vence amanhã" : `Vence em ${dias} dias`}
+          </span>
+          {venceHoje && <span className="ml-auto text-[10px] font-bold text-warning/80">Prioridade máxima</span>}
+        </div>
+      )}
+
       <div className="flex items-end justify-between gap-2 px-4 pt-3">
         <div>
           <p className="mono-label text-muted">Valor</p>
-          <p className="text-2xl font-black tabular-nums text-accent">{brl(freebet.valor)}</p>
+          <p className={`text-2xl font-black tabular-nums ${venceHoje ? "text-warning" : validadeVencida ? "text-negative" : "text-accent"}`}>{brl(freebet.valor)}</p>
         </div>
         {freebet.tipo && <span className="mb-1 rounded-md bg-surface-2 px-2 py-1 text-[10px] font-bold text-text-2">{freebet.tipo}</span>}
       </div>
 
       <div className="grid grid-cols-2 gap-2 px-3 py-3">
         <Info label="Parceiro" value={freebet.parceiroNome ?? "—"} />
-        <Info label="Procedimento" value={freebet.procedimento ?? "—"} />
+        {/* O procedimento é COMO foi ganha. Se veio de operação, ele é a verdade da origem. */}
+        <Info label="Procedimento" value={freebet.origem?.procedimento ?? freebet.procedimento ?? "—"} />
         <Info label="Validade" value={validade?.hint ?? "Sem validade"} tone={validade?.tone} />
         <Info label="Requisito" value={freebet.requisito ?? "—"} />
       </div>
+
+      {/* De onde ela veio: qual operação e quando. Só aparece se nasceu de uma. */}
+      {freebet.origem && (
+        <div className="mx-3 mb-3 rounded-xl border border-info/20 bg-info/[0.06] px-3 py-2.5">
+          <p className="mono-label text-info">Origem</p>
+          <p className="mt-1 flex flex-wrap items-baseline gap-x-1.5 text-sm font-bold text-text">
+            <span className="text-info">Operação {freebet.origem.numero}</span>
+            <span className="min-w-0 truncate font-semibold text-text-2">· {freebet.origem.evento}</span>
+          </p>
+          <p className="mt-0.5 text-[11px] text-muted">
+            {new Date(freebet.origem.data).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+          </p>
+        </div>
+      )}
 
       {freebet.status === "EXTRAIDA" && (
         <div className="px-3 pb-3">

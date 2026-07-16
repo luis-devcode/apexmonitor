@@ -5,7 +5,7 @@ import { requireUserId } from "@/lib/auth";
 import { canonicalHouseName, normHouse } from "@/lib/houses";
 import { readCloneGroups } from "@/lib/odds-feed";
 import { prisma } from "@/lib/prisma";
-import { isProcedimento, tipoDoProcedimento } from "@/lib/procedimentos";
+import { isProcedimento, procedimentoLabel, tipoDoProcedimento } from "@/lib/procedimentos";
 
 type RawLeg = { casa?: unknown; selecao?: unknown; odd?: unknown; stake?: unknown; retorno?: unknown; isLay?: unknown; freebet?: unknown; comissao?: unknown; aumento?: unknown };
 type Perna = { stake: number; odd: number; isLay: boolean; freebet: boolean; comissaoPct: number; aumentoPct: number; risco: number };
@@ -383,10 +383,11 @@ export async function finalizarOperacaoAction(
           operacaoId: operacao.id,
           valor: fbValor,
           tipo: "Promoção",
-          procedimento: operacao.evento,
+          // O procedimento é COMO a freebet foi ganha (Superodd, Missão…), não o
+          // nome do jogo. O jogo e a data vêm da operação vinculada (operacaoId).
+          procedimento: procedimentoLabel(operacao.procedimento) ?? operacao.tipo,
           expiraEm,
           status: "PENDENTE",
-          notas: `Gerada pela operação: ${operacao.evento}`,
         },
       });
     }
