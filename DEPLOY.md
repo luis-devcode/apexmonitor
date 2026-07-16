@@ -265,12 +265,23 @@ Abra `https://apexmonitor.com.br/login`. Como o banco está vazio, aparece o
   > (backup pago da Hetzner, um bucket, ou `scp` para outro lugar).
 - **Nunca** exponha o repositório publicamente (a pasta `integrations/monitorodds`
   revela a fonte dos dados).
-- **Troque as senhas compartilhadas** do MonitorOdds.
 - **Antes de virar público:** renomear a pasta `integrations/monitorodds` para um
   nome neutro (ficou de fora do dev pra não quebrar o coletor rodando; é um passo
   de última hora, com o serviço parado).
 
+## Sobre a fonte de dados
+
+O uso do feed do MonitorOdds está **liberado pelo dono** — não é pendência.
+
+A dependência operacional, porém, é real: em 16/07/2026 a senha compartilhada mudou
+sem aviso e derrubou o coletor em produção. Quando isso acontecer de novo, o sintoma
+é `login falhou (401)` no `journalctl -u apexmonitor-coletor`; conserto é atualizar
+`MO_PASS` em `integrations/monitorodds/.env` e reiniciar o serviço.
+
+O plano de longo prazo é uma **API de odds própria**, que remove essa dependência (e
+torna desnecessário esconder o vínculo com a fonte). Sem data.
+
 ## Pendências de negócio (não são código)
 
-- **Licença comercial do feed:** acerte por escrito com o dono do MonitorOdds o
-  direito de revender o dado por assinatura, antes de cobrar do primeiro cliente.
+- **Termos de Uso + Política de Privacidade (LGPD)** — obrigatórios para um produto
+  pago que guarda CPF de parceiros e senhas de casas de aposta.
