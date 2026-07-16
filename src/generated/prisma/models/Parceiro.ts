@@ -612,6 +612,7 @@ export type ParceiroCreateOrConnectWithoutUserInput = {
 
 export type ParceiroCreateManyUserInputEnvelope = {
   data: Prisma.ParceiroCreateManyUserInput | Prisma.ParceiroCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type ParceiroUpsertWithWhereUniqueWithoutUserInput = {
@@ -1718,6 +1719,7 @@ export type ParceiroCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * The data used to create many Parceiros.
    */
   data: Prisma.ParceiroCreateManyInput | Prisma.ParceiroCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1736,6 +1738,7 @@ export type ParceiroCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extens
    * The data used to create many Parceiros.
    */
   data: Prisma.ParceiroCreateManyInput | Prisma.ParceiroCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

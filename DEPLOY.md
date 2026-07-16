@@ -11,7 +11,17 @@ App e coletor compartilham a pasta de dados do coletor.
 
 ## Pré-requisitos (você contrata)
 
-- **VPS** com Ubuntu 22.04+ — ex.: Hetzner CX22 (~€4/mês) ou Contabo. 2 vCPU / 4 GB.
+- **VPS** com Ubuntu 22.04+ — Hetzner **CX23** (2 vCPU / 4 GB / 40 GB), Falkenstein
+  ou Nuremberg. ~€6/mês (com IPv4), preço fixo, cobrança por hora, sem contrato.
+  Escolhido porque só cabia pagamento **mensal**: a Hostinger São Paulo custava
+  R$80/mês recorrente contra ~R$39 aqui. Não pegue Ashburn — lá a linha CX não
+  existe, só CPX a €19,49.
+- **Cloudflare** (plano grátis) na frente — **não é opcional nesta arquitetura.**
+  O servidor está na Alemanha: 200ms de São Paulo. A Cloudflare tem ponto em São
+  Paulo e termina o handshake TCP+TLS lá (~10ms), que é o que custa 3 viagens.
+  Sem ela, a primeira abertura passa de 1s; com ela, ~350ms.
+- **Migração futura:** quando houver cliente pagante, mover pra um VPS em São Paulo
+  (~10ms) é reproduzir este documento noutra máquina. Nada aqui prende a Hetzner.
 - **Domínio** — `apexmonitor.com.br` ✅ já registrado (registro.br).
 - **Repositório privado no GitHub** ✅ `luis-devcode/apexmonitor` (é de onde o servidor baixa).
 
@@ -23,7 +33,38 @@ App e coletor compartilham a pasta de dados do coletor.
 # como root no VPS
 apt update && apt upgrade -y
 curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt install -y nodejs
-apt install -y postgresql caddy git
+apt install -y postgresql git
+```
+
+**Caddy** não está nos repositórios do Ubuntu — precisa do repositório oficial antes:
+```bash
+apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+  | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+  | tee /etc/apt/sources.list.d/caddy-stable.list
+apt update && apt install -y caddy
+```
+
+**Firewall (painel da Hetzner, grátis).** Aplique **depois** de confirmar que o SSH
+entra — regra errada aqui tranca o acesso e obriga a recriar o servidor. Bloqueia
+na rede, antes de chegar na máquina, então nem gasta CPU. Entrada permitida só em:
+
+| Porta | Para quê |
+|---|---|
+| 22 | SSH |
+| 80 | Let's Encrypt (desafio do certificado) + redirect pra 443 |
+| 443 | HTTPS |
+
+Postgres (5432) **nunca** exposto — o app fala com ele por `localhost`.
+
+**Swap.** O `npm run build` do Next pede ~2 GB; com o Postgres junto, os 4 GB ficam
+sem margem. Com swap o build fica lento em vez de morrer por OOM:
+
+```bash
+fallocate -l 2G /swapfile && chmod 600 /swapfile
+mkswap /swapfile && swapon /swapfile
+echo '/swapfile none swap sw 0 0' >> /etc/fstab   # sobrevive ao reboot
 ```
 
 ## Passo 2 — Banco Postgres
@@ -32,17 +73,34 @@ apt install -y postgresql caddy git
 sudo -u postgres psql
 ```
 ```sql
-CREATE DATABASE apexmonitor;
 CREATE USER apex WITH ENCRYPTED PASSWORD 'ESCOLHA_UMA_SENHA_FORTE';
-GRANT ALL PRIVILEGES ON DATABASE apexmonitor TO apex;
+CREATE DATABASE apexmonitor OWNER apex;
 \q
 ```
 
+> **Use `OWNER`, não `GRANT ALL PRIVILEGES ON DATABASE`.** Do Postgres 15 em diante
+> o schema `public` não é mais gravável por quem não é dono: com só o GRANT, o
+> `prisma db push` falha ao criar as tabelas com um erro de permissão pouco óbvio.
+
 ## Passo 3 — Baixar o código e configurar segredos
+
+O repositório é privado. Autorize o servidor com uma **deploy key** — somente leitura
+e restrita a este repositório. (Um token pessoal daria ao servidor poder sobre a conta
+inteira do GitHub; se a máquina cair em mãos erradas, a deploy key só lê o código.)
+
+```bash
+# no VPS: gera a chave e mostra a publica
+ssh-keygen -t ed25519 -N "" -C "apexmonitor-deploy-key" -f /root/.ssh/id_ed25519
+ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts
+cat /root/.ssh/id_ed25519.pub
+```
+
+Cole essa chave em **GitHub → repositório → Settings → Deploy keys → Add deploy key**,
+deixando "Allow write access" **desmarcado**. Depois clone via SSH:
 
 ```bash
 cd /opt
-git clone https://github.com/luis-devcode/apexmonitor.git
+git clone git@github.com:luis-devcode/apexmonitor.git
 cd apexmonitor
 npm install
 cp .env.example .env
@@ -140,6 +198,12 @@ systemctl reload caddy
 ```
 Aponte o DNS do domínio (registro A) para o IP do VPS. O Caddy emite o certificado
 HTTPS sozinho.
+
+**Ordem importa com a Cloudflare.** Suba o DNS primeiro **sem o proxy** (nuvem
+cinza) e deixe o Caddy emitir o certificado — com o proxy ligado antes disso, o
+desafio do Let's Encrypt pode falhar. Só depois ligue o proxy (nuvem laranja) e
+ponha o SSL em **Full (strict)**. É o proxy que traz o ganho de latência para o
+Brasil (handshake em São Paulo + cache dos estáticos).
 
 ## Passo 8 — Criar seu administrador
 

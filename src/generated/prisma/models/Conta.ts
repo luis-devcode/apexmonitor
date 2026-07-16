@@ -720,6 +720,7 @@ export type ContaCreateOrConnectWithoutUserInput = {
 
 export type ContaCreateManyUserInputEnvelope = {
   data: Prisma.ContaCreateManyUserInput | Prisma.ContaCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type ContaUpsertWithWhereUniqueWithoutUserInput = {
@@ -792,6 +793,7 @@ export type ContaCreateOrConnectWithoutParceiroInput = {
 
 export type ContaCreateManyParceiroInputEnvelope = {
   data: Prisma.ContaCreateManyParceiroInput | Prisma.ContaCreateManyParceiroInput[]
+  skipDuplicates?: boolean
 }
 
 export type ContaUpsertWithWhereUniqueWithoutParceiroInput = {
@@ -847,6 +849,7 @@ export type ContaCreateOrConnectWithoutCasaInput = {
 
 export type ContaCreateManyCasaInputEnvelope = {
   data: Prisma.ContaCreateManyCasaInput | Prisma.ContaCreateManyCasaInput[]
+  skipDuplicates?: boolean
 }
 
 export type ContaUpsertWithWhereUniqueWithoutCasaInput = {
@@ -2007,6 +2010,7 @@ export type ContaCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * The data used to create many Contas.
    */
   data: Prisma.ContaCreateManyInput | Prisma.ContaCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -2025,6 +2029,7 @@ export type ContaCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extension
    * The data used to create many Contas.
    */
   data: Prisma.ContaCreateManyInput | Prisma.ContaCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

@@ -536,6 +536,7 @@ export type CasaCreateOrConnectWithoutUserInput = {
 
 export type CasaCreateManyUserInputEnvelope = {
   data: Prisma.CasaCreateManyUserInput | Prisma.CasaCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type CasaUpsertWithWhereUniqueWithoutUserInput = {
@@ -1509,6 +1510,7 @@ export type CasaCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * The data used to create many Casas.
    */
   data: Prisma.CasaCreateManyInput | Prisma.CasaCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1527,6 +1529,7 @@ export type CasaCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    * The data used to create many Casas.
    */
   data: Prisma.CasaCreateManyInput | Prisma.CasaCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

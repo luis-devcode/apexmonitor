@@ -632,6 +632,7 @@ export type MovimentoCreateOrConnectWithoutUserInput = {
 
 export type MovimentoCreateManyUserInputEnvelope = {
   data: Prisma.MovimentoCreateManyUserInput | Prisma.MovimentoCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type MovimentoUpsertWithWhereUniqueWithoutUserInput = {
@@ -697,6 +698,7 @@ export type MovimentoCreateOrConnectWithoutContaInput = {
 
 export type MovimentoCreateManyContaInputEnvelope = {
   data: Prisma.MovimentoCreateManyContaInput | Prisma.MovimentoCreateManyContaInput[]
+  skipDuplicates?: boolean
 }
 
 export type MovimentoUpsertWithWhereUniqueWithoutContaInput = {
@@ -746,6 +748,7 @@ export type MovimentoCreateOrConnectWithoutOperacaoInput = {
 
 export type MovimentoCreateManyOperacaoInputEnvelope = {
   data: Prisma.MovimentoCreateManyOperacaoInput | Prisma.MovimentoCreateManyOperacaoInput[]
+  skipDuplicates?: boolean
 }
 
 export type MovimentoUpsertWithWhereUniqueWithoutOperacaoInput = {
@@ -1676,6 +1679,7 @@ export type MovimentoCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * The data used to create many Movimentos.
    */
   data: Prisma.MovimentoCreateManyInput | Prisma.MovimentoCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1694,6 +1698,7 @@ export type MovimentoCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Exten
    * The data used to create many Movimentos.
    */
   data: Prisma.MovimentoCreateManyInput | Prisma.MovimentoCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

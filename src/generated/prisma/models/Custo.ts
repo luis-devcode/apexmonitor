@@ -582,6 +582,7 @@ export type CustoCreateOrConnectWithoutUserInput = {
 
 export type CustoCreateManyUserInputEnvelope = {
   data: Prisma.CustoCreateManyUserInput | Prisma.CustoCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type CustoUpsertWithWhereUniqueWithoutUserInput = {
@@ -1427,6 +1428,7 @@ export type CustoCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * The data used to create many Custos.
    */
   data: Prisma.CustoCreateManyInput | Prisma.CustoCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1445,6 +1447,7 @@ export type CustoCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extension
    * The data used to create many Custos.
    */
   data: Prisma.CustoCreateManyInput | Prisma.CustoCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

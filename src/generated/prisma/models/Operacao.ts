@@ -884,6 +884,7 @@ export type OperacaoCreateOrConnectWithoutUserInput = {
 
 export type OperacaoCreateManyUserInputEnvelope = {
   data: Prisma.OperacaoCreateManyUserInput | Prisma.OperacaoCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type OperacaoUpsertWithWhereUniqueWithoutUserInput = {
@@ -978,6 +979,7 @@ export type OperacaoCreateOrConnectWithoutParceiroInput = {
 
 export type OperacaoCreateManyParceiroInputEnvelope = {
   data: Prisma.OperacaoCreateManyParceiroInput | Prisma.OperacaoCreateManyParceiroInput[]
+  skipDuplicates?: boolean
 }
 
 export type OperacaoUpsertWithWhereUniqueWithoutParceiroInput = {
@@ -2472,6 +2474,7 @@ export type OperacaoCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * The data used to create many Operacaos.
    */
   data: Prisma.OperacaoCreateManyInput | Prisma.OperacaoCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -2490,6 +2493,7 @@ export type OperacaoCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extens
    * The data used to create many Operacaos.
    */
   data: Prisma.OperacaoCreateManyInput | Prisma.OperacaoCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

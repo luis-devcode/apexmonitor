@@ -870,6 +870,7 @@ export type FreebetCreateOrConnectWithoutUserInput = {
 
 export type FreebetCreateManyUserInputEnvelope = {
   data: Prisma.FreebetCreateManyUserInput | Prisma.FreebetCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type FreebetUpsertWithWhereUniqueWithoutUserInput = {
@@ -953,6 +954,7 @@ export type FreebetCreateOrConnectWithoutParceiroInput = {
 
 export type FreebetCreateManyParceiroInputEnvelope = {
   data: Prisma.FreebetCreateManyParceiroInput | Prisma.FreebetCreateManyParceiroInput[]
+  skipDuplicates?: boolean
 }
 
 export type FreebetUpsertWithWhereUniqueWithoutParceiroInput = {
@@ -1014,6 +1016,7 @@ export type FreebetCreateOrConnectWithoutCasaInput = {
 
 export type FreebetCreateManyCasaInputEnvelope = {
   data: Prisma.FreebetCreateManyCasaInput | Prisma.FreebetCreateManyCasaInput[]
+  skipDuplicates?: boolean
 }
 
 export type FreebetUpsertWithWhereUniqueWithoutCasaInput = {
@@ -1075,6 +1078,7 @@ export type FreebetCreateOrConnectWithoutOperacaoInput = {
 
 export type FreebetCreateManyOperacaoInputEnvelope = {
   data: Prisma.FreebetCreateManyOperacaoInput | Prisma.FreebetCreateManyOperacaoInput[]
+  skipDuplicates?: boolean
 }
 
 export type FreebetCreateWithoutUsoOperacaoInput = {
@@ -1120,6 +1124,7 @@ export type FreebetCreateOrConnectWithoutUsoOperacaoInput = {
 
 export type FreebetCreateManyUsoOperacaoInputEnvelope = {
   data: Prisma.FreebetCreateManyUsoOperacaoInput | Prisma.FreebetCreateManyUsoOperacaoInput[]
+  skipDuplicates?: boolean
 }
 
 export type FreebetUpsertWithWhereUniqueWithoutOperacaoInput = {
@@ -2334,6 +2339,7 @@ export type FreebetCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * The data used to create many Freebets.
    */
   data: Prisma.FreebetCreateManyInput | Prisma.FreebetCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -2352,6 +2358,7 @@ export type FreebetCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensi
    * The data used to create many Freebets.
    */
   data: Prisma.FreebetCreateManyInput | Prisma.FreebetCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

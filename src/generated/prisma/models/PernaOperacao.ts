@@ -830,6 +830,7 @@ export type PernaOperacaoCreateOrConnectWithoutUserInput = {
 
 export type PernaOperacaoCreateManyUserInputEnvelope = {
   data: Prisma.PernaOperacaoCreateManyUserInput | Prisma.PernaOperacaoCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type PernaOperacaoUpsertWithWhereUniqueWithoutUserInput = {
@@ -916,6 +917,7 @@ export type PernaOperacaoCreateOrConnectWithoutContaInput = {
 
 export type PernaOperacaoCreateManyContaInputEnvelope = {
   data: Prisma.PernaOperacaoCreateManyContaInput | Prisma.PernaOperacaoCreateManyContaInput[]
+  skipDuplicates?: boolean
 }
 
 export type PernaOperacaoUpsertWithWhereUniqueWithoutContaInput = {
@@ -979,6 +981,7 @@ export type PernaOperacaoCreateOrConnectWithoutOperacaoInput = {
 
 export type PernaOperacaoCreateManyOperacaoInputEnvelope = {
   data: Prisma.PernaOperacaoCreateManyOperacaoInput | Prisma.PernaOperacaoCreateManyOperacaoInput[]
+  skipDuplicates?: boolean
 }
 
 export type PernaOperacaoUpsertWithWhereUniqueWithoutOperacaoInput = {
@@ -2035,6 +2038,7 @@ export type PernaOperacaoCreateManyArgs<ExtArgs extends runtime.Types.Extensions
    * The data used to create many PernaOperacaos.
    */
   data: Prisma.PernaOperacaoCreateManyInput | Prisma.PernaOperacaoCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -2053,6 +2057,7 @@ export type PernaOperacaoCreateManyAndReturnArgs<ExtArgs extends runtime.Types.E
    * The data used to create many PernaOperacaos.
    */
   data: Prisma.PernaOperacaoCreateManyInput | Prisma.PernaOperacaoCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */
