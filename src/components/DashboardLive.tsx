@@ -67,18 +67,17 @@ export default function DashboardLive() {
 
   return (
     <div className="mx-auto w-full max-w-[1380px] space-y-5 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <header>
         <div>
           <div className="mb-2 flex items-center gap-2">
             <span className="h-px w-6 bg-accent" />
             <p className="mono-label text-accent">Monitores</p>
           </div>
           <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
-            Panorama de Odds <span className="text-accent">•</span>
+            Panorama de Odds <FeedStatus health={data?.health} loading={loading} />
           </h1>
           <p className="mt-1.5 text-sm text-text-2">O retrato do mercado agora — odds, arbitragens e boosts, atualizados enquanto o mercado se move.</p>
         </div>
-        <FeedStatus health={data?.health} updatedAt={data?.updatedAt} loading={loading} />
       </header>
 
       {error && (
@@ -166,14 +165,21 @@ export default function DashboardLive() {
   );
 }
 
-function FeedStatus({ health, updatedAt, loading }: { health?: LiveHealth; updatedAt: string | null | undefined; loading: boolean }) {
-  const time = updatedAt ? new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(updatedAt)) : "--:--:--";
-  const live = health?.live;
+/**
+ * Sinal operacional propositalmente discreto: verde = normal, âmbar = feed
+ * atrasado, azul = primeira carga. Para o cliente, funciona como o ponto da marca.
+ */
+function FeedStatus({ health, loading }: { health?: LiveHealth; loading: boolean }) {
+  const state = loading ? "loading" : health?.live ? "live" : "stale";
+  const color = state === "live"
+    ? "bg-positive/70 shadow-[0_0_7px_rgba(52,211,153,0.45)]"
+    : state === "stale"
+      ? "bg-warning/55 shadow-[0_0_6px_rgba(245,158,11,0.28)]"
+      : "bg-accent/55";
   return (
-    <div className={`flex w-fit items-center gap-3 rounded-xl border px-3.5 py-2.5 ${live ? "border-positive/20 bg-positive/8" : "border-warning/20 bg-warning/8"}`}>
-      <span className={`relative flex h-2.5 w-2.5 ${loading ? "opacity-40" : ""}`}><span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${live ? "bg-positive" : "bg-warning"}`} /><span className={`relative h-2.5 w-2.5 rounded-full ${live ? "bg-positive" : "bg-warning"}`} /></span>
-      <div className="leading-tight"><p className={`text-xs font-extrabold ${live ? "text-positive" : "text-warning"}`}>{loading ? "Conectando" : live ? "Odds em tempo real" : "Reconectando"}</p><p className="mt-0.5 font-mono text-[10px] text-muted">Atualizado às {time}</p></div>
-    </div>
+    <span aria-hidden="true" data-feed-state={state} className="ml-1 inline-flex h-3 w-3 translate-y-[-1px] items-center justify-center align-middle">
+      <span className={`h-1.5 w-1.5 rounded-full transition-colors duration-500 ${color}`} />
+    </span>
   );
 }
 

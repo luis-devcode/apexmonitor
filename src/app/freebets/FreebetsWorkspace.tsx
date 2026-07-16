@@ -76,6 +76,16 @@ function diasAteExpirar(iso: string) {
   return dayIndex(expiration) - dayIndex(todayParts());
 }
 
+function prioridadeDeVencimento(iso: string | null) {
+  if (!iso) return Number.POSITIVE_INFINITY;
+  const days = diasAteExpirar(iso);
+  // O que vence hoje sempre aparece primeiro; depois vêm validades já vencidas
+  // e, por fim, os próximos dias em ordem crescente.
+  if (days === 0) return 0;
+  if (days < 0) return 1 + Math.min(Math.abs(days), 999) / 1_000;
+  return days + 1;
+}
+
 function freebetUrgente(freebet: Freebet) {
   return freebet.status === "PENDENTE"
     && !!freebet.expiraEm
@@ -140,7 +150,7 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
   const alertas = useMemo(
     () => freebets
       .filter(freebetUrgente)
-      .sort((a, b) => Date.parse(a.expiraEm!) - Date.parse(b.expiraEm!)),
+      .sort((a, b) => prioridadeDeVencimento(a.expiraEm) - prioridadeDeVencimento(b.expiraEm)),
     [freebets],
   );
 
@@ -166,8 +176,8 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
       const wa = a.status === "PENDENTE" ? 0 : 1;
       const wb = b.status === "PENDENTE" ? 0 : 1;
       if (wa !== wb) return wa - wb;
-      const ea = a.expiraEm ? Date.parse(a.expiraEm) : Infinity;
-      const eb = b.expiraEm ? Date.parse(b.expiraEm) : Infinity;
+      const ea = prioridadeDeVencimento(a.expiraEm);
+      const eb = prioridadeDeVencimento(b.expiraEm);
       return ea - eb;
     });
   }, [freebets, tab, filtroCasa, filtroParceiro]);
