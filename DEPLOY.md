@@ -254,6 +254,29 @@ Abra `https://apexmonitor.com.br/login`. Como o banco está vazio, aparece o
 
 ---
 
+## Fluxo do dia a dia (mudar o site depois de no ar)
+
+Não há ambiente local: o repositório é Postgres e a máquina do Luis não tem banco.
+Então **toda mudança vai direto para produção**. O fluxo:
+
+1. Editar o código no repositório local
+2. `npx tsc --noEmit` e `npx eslint` — **rodam sem banco**, então continuam sendo a
+   rede de proteção antes do push
+3. `git push origin main`
+4. No servidor: `apexmonitor-deploy`
+
+O script `/usr/local/bin/apexmonitor-deploy` faz pull → npm install → prisma
+generate + db push → **build** → restart, e termina conferindo se `/login` responde.
+
+> **O build é o portão.** Ele roda **antes** do restart e o script usa `set -e`: se
+> o build falhar, nada é reiniciado e o site continua no ar com a versão anterior.
+> Código quebrado não alcança o serviço. A única janela de indisponibilidade são os
+> ~2s do restart.
+
+> **`safe.directory`:** o repo é dono do usuário `apexmonitor` e o deploy roda como
+> root, então o git recusa por "dubious ownership" até rodar
+> `git config --global --add safe.directory /opt/apexmonitor`.
+
 ## Pós-lançamento
 
 - **Backup diário do Postgres** — ✅ feito: `apexmonitor-backup.timer` roda 03:30,
