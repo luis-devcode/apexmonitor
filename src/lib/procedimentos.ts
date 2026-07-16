@@ -22,7 +22,9 @@ export const PROCEDIMENTOS: Procedimento[] = [
   { value: "PROTECAO_DUPLO_GREEN", label: "Proteção duplo green", tipo: "SUREBET" },
   { value: "MISSAO", label: "Missão", tipo: "OUTRO" },
   { value: "GIROS_GRATIS", label: "Giros grátis", tipo: "OUTRO" },
-  { value: "AUMENTO_25", label: "Aumento 25%", tipo: "SUPERODD" },
+  // O percentual real fica em cada entrada; o procedimento só identifica a
+  // categoria da operação e não deve sugerir um valor fixo.
+  { value: "AUMENTO_25", label: "Aumento %", tipo: "SUPERODD" },
   { value: "PROMOCAO", label: "Promoção", tipo: "OUTRO" },
   { value: "CASHBACK", label: "Cashback", tipo: "OUTRO" },
   { value: "APOSTA_SEM_RISCO", label: "Aposta sem risco", tipo: "OUTRO" },

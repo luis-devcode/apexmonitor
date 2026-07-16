@@ -8,6 +8,7 @@ import { useActionState, useEffect, useMemo, useRef, useState, useTransition } f
 import AppModal from "@/components/AppModal";
 import DateField from "@/components/DateField";
 import EventCombo from "@/components/EventCombo";
+import HousePicker from "@/components/HousePicker";
 import type { EventOption } from "@/lib/event-options";
 import { PROCEDIMENTOS, procedimentoLabel } from "@/lib/procedimentos";
 import {
@@ -31,6 +32,7 @@ type Perna = {
   isLay: boolean;
   freebet: boolean;
   comissaoPct: number;
+  aumentoPct: number;
   risco: number;
   resultado: string;
   retorno: number | null;
@@ -74,6 +76,12 @@ const dateKey = (iso: string) => {
 };
 const monthKey = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
 const todayKey = () => dateKey(new Date().toISOString());
+const relativeDayKey = (offset: number) => {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  date.setDate(date.getDate() + offset);
+  return dateKey(date.toISOString());
+};
 const dataLabel = (iso: string) => new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const horaLabel = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 const dataInputValue = () => {
@@ -87,6 +95,8 @@ const datetimeLocalFromIso = (iso: string) => {
 };
 const signedBrl = (value: number) => `${value >= 0 ? "+" : ""}${brl(value)}`;
 const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
+const retornoSimplesInput = (leg: ManualLeg) =>
+  round2(moneyInputValue(leg.stake) * moneyInputValue(leg.odd)).toFixed(2).replace(".", ",");
 
 /**
  * O que volta pro bolso se esta perna vencer — mesma conta do servidor
@@ -95,10 +105,11 @@ const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
  *  - LAY:     responsabilidade de volta + a stake do apostador, menos comissão.
  *  - FREEBET: a stake é da casa, então volta só o lucro.
  */
-function retornoDaPerna(p: Pick<Perna, "stake" | "odd" | "isLay" | "freebet" | "comissaoPct">) {
+function retornoDaPerna(p: Pick<Perna, "stake" | "odd" | "isLay" | "freebet" | "comissaoPct" | "aumentoPct">) {
   const comm = Math.min(Math.max(p.comissaoPct, 0), 100) / 100;
-  if (p.isLay) return p.stake * Math.max(0, p.odd - 1) + p.stake * (1 - comm);
-  const lucro = p.stake * Math.max(0, p.odd - 1) * (1 - comm);
+  const aumento = Math.max(p.aumentoPct, 0) / 100;
+  if (p.isLay) return p.stake * Math.max(0, p.odd - 1) + p.stake * (1 - comm) * (1 + aumento);
+  const lucro = p.stake * Math.max(0, p.odd - 1) * (1 + aumento) * (1 - comm);
   return p.freebet ? lucro : p.stake + lucro;
 }
 
@@ -130,6 +141,13 @@ export default function PlanilhaWorkspace({ operacoes, contas, freebets, casas, 
   const [de, setDe] = useState(todayKey);
   const [ate, setAte] = useState(todayKey);
   const [modalPreset, setModalPreset] = useState<TipoRegistro | "escolher" | null>(abrirNova ? "escolher" : null);
+
+  const hoje = todayKey();
+  const ontem = relativeDayKey(-1);
+  const inicio7Dias = relativeDayKey(-6);
+  const inicio30Dias = relativeDayKey(-29);
+  const verPeriodo = (inicio: string, fim: string) => { setDe(inicio); setAte(fim); };
+  const periodoAtivo = (inicio: string, fim: string) => de === inicio && ate === fim;
 
   const fecharNovaOperacao = () => {
     setModalPreset(null);
@@ -199,6 +217,22 @@ export default function PlanilhaWorkspace({ operacoes, contas, freebets, casas, 
   const listaLabel = diaSelecionado
     ? new Date(`${diaSelecionado}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
     : de || ate ? "Período selecionado" : "Todas as operações";
+  // O destaque azul acompanha o período escolhido na própria planilha. Com o
+  // filtro padrão (Hoje), ele é literalmente o lucro realizado do dia.
+  const operacoesDoPeriodo = operacoes.filter((operacao) => {
+    const dia = dateKey(operacao.createdAt);
+    if (de && dia < de) return false;
+    if (ate && dia > ate) return false;
+    return true;
+  });
+  const finalizadasDoPeriodo = operacoesDoPeriodo.filter((operacao) => operacao.status === "FINALIZADA");
+  const lucroDoPeriodo = finalizadasDoPeriodo.reduce((sum, operacao) => sum + (operacao.lucroReal ?? 0), 0);
+  const capitalDoPeriodo = operacoesDoPeriodo.reduce((sum, operacao) => sum + operacao.stakeTotal, 0);
+  const lucroDestaqueLabel = diaSelecionado ? "Lucro do dia" : "Lucro do período";
+  const lucroDestaqueValor = lucroDoPeriodo === 0 ? brl(0) : signedBrl(lucroDoPeriodo);
+  const lucroDestaqueDetalhe = `${finalizadasDoPeriodo.length} ${finalizadasDoPeriodo.length === 1 ? "operação finalizada" : "operações finalizadas"}${diaSelecionado ? " no dia selecionado" : " no período"}`;
+  const capitalLabel = diaSelecionado ? "Capital movimentado no dia" : !de && !ate ? "Capital movimentado total" : "Capital movimentado no período";
+  const capitalDetalhe = `${operacoesDoPeriodo.length} ${operacoesDoPeriodo.length === 1 ? "operação registrada" : "operações registradas"}${diaSelecionado ? " no dia selecionado" : !de && !ate ? " no total" : " no período"}`;
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-5 px-4 py-5 sm:px-6 lg:px-8">
@@ -237,11 +271,11 @@ export default function PlanilhaWorkspace({ operacoes, contas, freebets, casas, 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-[1.25fr_1fr_1fr_1fr]">
         <article className="card-featured relative overflow-hidden rounded-2xl border p-5">
           <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
-          <p className="mono-label">Capital movimentado</p>
-          <p className="relative mt-3 text-2xl font-black tabular-nums sm:text-3xl">{brl(stats.totalInvestido)}</p>
-          <p className="relative mt-1 text-[10px] text-white/75">Soma das operações registradas</p>
+          <p className="mono-label">{lucroDestaqueLabel}</p>
+          <p className={`relative mt-3 text-2xl font-black tabular-nums sm:text-3xl ${lucroDoPeriodo < 0 ? "text-red-200" : "text-white"}`}>{lucroDestaqueValor}</p>
+          <p className="relative mt-1 text-[10px] text-white/75">{lucroDestaqueDetalhe}</p>
         </article>
-        <Metric label="Lucro realizado" value={signedBrl(stats.lucroTotal)} tone={stats.lucroTotal < 0 ? "negative" : "positive"} detail={`${stats.finalizadas} operações finalizadas`} />
+        <Metric label={capitalLabel} value={brl(capitalDoPeriodo)} tone="info" detail={capitalDetalhe} />
         <Metric label="ROI realizado" value={`${stats.roiGeral >= 0 ? "+" : ""}${stats.roiGeral.toFixed(2)}%`} tone={stats.roiGeral < 0 ? "negative" : "positive"} detail="Calculado sobre finalizadas" />
         <Metric label="Potencial protegido" value={signedBrl(lucroAberto)} tone={lucroAberto < 0 ? "negative" : "info"} detail={semProtecaoAbertas > 0 ? `${semProtecaoAbertas} sem proteção` : `${protegidas.length} em acompanhamento`} />
       </section>
@@ -265,10 +299,12 @@ export default function PlanilhaWorkspace({ operacoes, contas, freebets, casas, 
         </div>
 
         <div className="flex flex-col gap-3 border-t border-border bg-surface-2/35 px-3 py-3 sm:px-4 lg:flex-row lg:items-center">
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className="mr-1 font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-muted">Período</span>
-            <button onClick={() => verDia(todayKey())} className={`h-8 rounded-lg border px-3 text-[11px] font-bold transition ${diaSelecionado === todayKey() ? "border-accent bg-accent text-accent-ink" : "border-border bg-surface text-text-2 hover:border-border-strong"}`}>Hoje</button>
-            <button onClick={() => { setDe(""); setAte(""); }} className={`h-8 rounded-lg border px-3 text-[11px] font-bold transition ${!de && !ate ? "border-accent bg-accent text-accent-ink" : "border-border bg-surface text-text-2 hover:border-border-strong"}`}>Todas</button>
+            <button onClick={() => verPeriodo(hoje, hoje)} className={`h-8 rounded-lg border px-3 text-[11px] font-bold transition ${periodoAtivo(hoje, hoje) ? "border-accent bg-accent text-accent-ink" : "border-border bg-surface text-text-2 hover:border-border-strong"}`}>Hoje</button>
+            <button onClick={() => verPeriodo(ontem, ontem)} className={`h-8 rounded-lg border px-3 text-[11px] font-bold transition ${periodoAtivo(ontem, ontem) ? "border-accent bg-accent text-accent-ink" : "border-border bg-surface text-text-2 hover:border-border-strong"}`}>Ontem</button>
+            <button onClick={() => verPeriodo(inicio7Dias, hoje)} className={`h-8 rounded-lg border px-3 text-[11px] font-bold transition ${periodoAtivo(inicio7Dias, hoje) ? "border-accent bg-accent text-accent-ink" : "border-border bg-surface text-text-2 hover:border-border-strong"}`}>Últimos 7 dias</button>
+            <button onClick={() => verPeriodo(inicio30Dias, hoje)} className={`h-8 rounded-lg border px-3 text-[11px] font-bold transition ${periodoAtivo(inicio30Dias, hoje) ? "border-accent bg-accent text-accent-ink" : "border-border bg-surface text-text-2 hover:border-border-strong"}`}>Últimos 30 dias</button>
           </div>
           <div className="flex min-w-0 items-center gap-2">
             <DateField value={de} onChange={setDe} className="min-w-0 flex-1 sm:w-[142px] sm:flex-none" />
@@ -319,7 +355,7 @@ export default function PlanilhaWorkspace({ operacoes, contas, freebets, casas, 
         <PlanilhaCalendar operacoes={semData} selected={diaSelecionado} onSelect={verDia} />
       </section>
 
-      {modalPreset && <ManualEntryModal preset={modalPreset} contas={contas} eventos={eventos} onClose={fecharNovaOperacao} />}
+      {modalPreset && <ManualEntryModal preset={modalPreset} contas={contas} casas={casas} eventos={eventos} onClose={fecharNovaOperacao} />}
     </div>
   );
 }
@@ -365,23 +401,29 @@ function OperacaoCard({ operacao, numero, contas, freebets, casas }: { operacao:
         </span>
       </div>
 
-      <div className="grid grid-cols-3 border-b border-border bg-surface-2/35">
-        <div className="border-r border-border px-4 py-3 sm:px-5">
+      <div className={`grid border-b border-border bg-surface-2/35 ${semProtecao ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}>
+        <div className={`border-r border-border px-4 py-3 sm:px-5 ${semProtecao ? "border-b sm:border-b-0" : ""}`}>
           <p className="mono-label text-muted">Investido</p>
           <p className="mt-1 text-sm font-black tabular-nums text-text sm:text-base">{brl(operacao.stakeTotal)}</p>
         </div>
-        <div className="border-r border-border px-4 py-3">
+        <div className={`border-border px-4 py-3 ${semProtecao ? "border-b sm:border-b-0 sm:border-r" : "border-r"}`}>
           <p className="mono-label text-muted">{finalizada ? "Lucro real" : semProtecao ? "Se bater" : "Lucro previsto"}</p>
           <p className={`mt-1 text-sm font-black tabular-nums sm:text-base ${lucro >= 0 ? "text-positive" : "text-negative"}`}>{signedBrl(lucro)}</p>
         </div>
+        {semProtecao && (
+          <div className="border-r border-border px-4 py-3">
+            <p className="mono-label text-muted">Se perder</p>
+            <p className="mt-1 text-sm font-black tabular-nums text-negative sm:text-base">-{brl(operacao.stakeTotal)}</p>
+          </div>
+        )}
         <div className="px-4 py-3">
-          <p className="mono-label text-muted">ROI</p>
+          <p className="mono-label text-muted">{semProtecao ? "ROI se bater" : "ROI"}</p>
           <p className={`mt-1 text-sm font-black tabular-nums sm:text-base ${roi >= 0 ? "text-positive" : "text-negative"}`}>{roi >= 0 ? "+" : ""}{roi.toFixed(2)}%</p>
         </div>
       </div>
 
       <div className="sm:overflow-x-auto">
-        <table className="block w-full text-sm sm:table sm:min-w-[720px]">
+        <table className={`block w-full text-sm sm:table ${semProtecao ? "sm:min-w-[810px]" : "sm:min-w-[720px]"}`}>
           <thead className="hidden sm:table-header-group">
             <tr className="mono-label border-b border-border bg-bg/25 text-left text-muted">
               <th className="px-4 py-2.5 font-medium">Entrada</th>
@@ -389,6 +431,7 @@ function OperacaoCard({ operacao, numero, contas, freebets, casas }: { operacao:
               <th className="px-3 py-2.5 text-center font-medium">Odd</th>
               <th className="px-3 py-2.5 text-right font-medium">Valor</th>
               <th className="px-3 py-2.5 text-right font-medium">Se bater</th>
+              {semProtecao && <th className="px-3 py-2.5 text-right font-medium">Se perder</th>}
               <th className="px-3 py-2.5 font-medium">Conta / CPF</th>
               <th className="px-3 py-2.5 text-center font-medium">Resultado</th>
             </tr>
@@ -405,6 +448,7 @@ function OperacaoCard({ operacao, numero, contas, freebets, casas }: { operacao:
                   <span className="flex items-center gap-1.5">
                     {p.selecao}
                     {p.isLay && <span className="rounded bg-negative/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-negative">Lay</span>}
+                    {p.aumentoPct > 0 && <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-accent">+{p.aumentoPct.toLocaleString("pt-BR")}%</span>}
                   </span>
                 </td>
                 <td className="min-w-0 sm:px-3 sm:py-3">
@@ -430,6 +474,13 @@ function OperacaoCard({ operacao, numero, contas, freebets, casas }: { operacao:
                   <span className={`block font-bold ${seBater >= 0 ? "text-positive" : "text-negative"}`}>{signedBrl(seBater)}</span>
                   <span className="block text-[10px] text-muted">retorno {brl(retornoDaPerna(p))}</span>
                 </td>
+                {semProtecao && (
+                  <td className="tabular-nums sm:px-3 sm:py-3 sm:text-right">
+                    <span className="mono-label mb-1 block text-muted sm:hidden">Se perder</span>
+                    <span className="block font-bold text-negative">-{brl(p.risco)}</span>
+                    <span className="block text-[10px] text-muted">retorno {brl(0)}</span>
+                  </td>
+                )}
                 <td className="min-w-0 sm:px-3 sm:py-3">
                   <span className="mono-label mb-1 block text-muted sm:hidden">Conta / CPF</span>
                   <ContaAssign pernaId={p.id} casa={p.casa} contaId={p.contaId} contas={contas} />
@@ -618,11 +669,21 @@ function ContaAssign({ pernaId, casa, contaId, contas }: { pernaId: string; casa
   );
 }
 
-function ManualEntryModal({ preset: presetInicial, contas, eventos, onClose }: { preset: TipoRegistro | "escolher"; contas: ContaOption[]; eventos: EventOption[]; onClose: () => void }) {
-  const casas = useMemo(() => [...new Set(contas.map((c) => c.casaNome))].sort((a, b) => a.localeCompare(b, "pt-BR")), [contas]);
+function ManualEntryModal({ preset: presetInicial, contas, casas, eventos, onClose }: { preset: TipoRegistro | "escolher"; contas: ContaOption[]; casas: CasaOption[]; eventos: EventOption[]; onClose: () => void }) {
+  // A casa da entrada não depende de já existir uma conta/saldo nela. A lista
+  // principal vem do mesmo diretório usado pela calculadora; casas presentes
+  // apenas nas contas do usuário entram como fallback.
+  const casasDisponiveis = useMemo(() => {
+    const porNome = new Map(casas.map((casa) => [normalize(casa.name), casa]));
+    for (const conta of contas) {
+      const key = normalize(conta.casaNome);
+      if (!porNome.has(key)) porNome.set(key, { name: conta.casaNome, logoUrl: null });
+    }
+    return [...porNome.values()].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  }, [casas, contas]);
   const [preset, setPreset] = useState<TipoRegistro | null>(presetInicial === "escolher" ? null : presetInicial);
   const [legs, setLegs] = useState<ManualLeg[]>([
-    { casa: casas[0] ?? "", selecao: "Entrada", odd: "2,00", stake: "100,00" },
+    { casa: "", selecao: "", odd: "2,00", stake: "100,00" },
   ]);
   const [evento, setEvento] = useState("");
   const [data, setData] = useState(dataInputValue);
@@ -630,6 +691,8 @@ function ManualEntryModal({ preset: presetInicial, contas, eventos, onClose }: {
   const [procedimento, setProcedimento] = useState("APOSTA_SIMPLES");
   const [error, action, pending] = useActionState(
     async (_prev: string | undefined, formData: FormData) => {
+      const entradas = JSON.parse(String(formData.get("pernas") ?? "[]")) as ManualLeg[];
+      if (preset === "aposta" && entradas.some((entrada) => !entrada.casa)) return "Selecione a casa de aposta de todas as entradas.";
       const result = await criarOperacaoAction(undefined, formData);
       if (!result) onClose();
       return result;
@@ -646,7 +709,14 @@ function ManualEntryModal({ preset: presetInicial, contas, eventos, onClose }: {
           stake: leg.stake || "0,00",
           retorno: leg.retorno || "0,00",
         }))
-      : legs
+      : legs.map((leg, index) => ({
+          ...leg,
+          // A entrada simples não precisa de mercado: o próprio número da
+          // linha identifica a aposta no histórico.
+          selecao: `Entrada ${index + 1}`,
+          // Começa em stake × odd, mas respeita um retorno digitado pelo usuário.
+          retorno: leg.retorno?.trim() ? leg.retorno : retornoSimplesInput(leg),
+        }))
   ), [legs, preset]);
   const casinoResumo = useMemo(() => {
     const gasto = legs.reduce((sum, leg) => sum + moneyInputValue(leg.stake), 0);
@@ -659,12 +729,12 @@ function ManualEntryModal({ preset: presetInicial, contas, eventos, onClose }: {
   const escolherTipo = (tipo: TipoRegistro) => {
     setPreset(tipo);
     if (tipo === "cassino") {
-      setLegs([{ casa: casas[0] ?? "", selecao: "Ganho de cassino", odd: "2,00", stake: "0,00", retorno: "0,00" }]);
+      setLegs([{ casa: "", selecao: "Ganho de cassino", odd: "2,00", stake: "0,00", retorno: "0,00" }]);
       setEvento("Sessão de cassino");
       setEsporte("Cassino");
       setProcedimento("GIROS_GRATIS");
     } else if (tipo === "aposta") {
-      setLegs([{ casa: casas[0] ?? "", selecao: "Entrada", odd: "2,00", stake: "100,00" }]);
+      setLegs([{ casa: "", selecao: "", odd: "2,00", stake: "100,00" }]);
       setEvento("");
       setEsporte("Futebol");
       setProcedimento("APOSTA_SIMPLES");
@@ -673,8 +743,8 @@ function ManualEntryModal({ preset: presetInicial, contas, eventos, onClose }: {
 
   const updateLeg = (index: number, patch: Partial<ManualLeg>) => setLegs((current) => current.map((leg, i) => i === index ? { ...leg, ...patch } : leg));
   const addLeg = () => setLegs((current) => [...current, preset === "cassino"
-    ? { casa: casas[0] ?? "", selecao: `Ganho de cassino ${current.length + 1}`, odd: "2,00", stake: "0,00", retorno: "0,00" }
-    : { casa: casas[0] ?? "", selecao: `Entrada ${current.length + 1}`, odd: "2,00", stake: "100,00" },
+    ? { casa: "", selecao: `Ganho de cassino ${current.length + 1}`, odd: "2,00", stake: "0,00", retorno: "0,00" }
+    : { casa: "", selecao: "", odd: "2,00", stake: "100,00" },
   ]);
   const removeLeg = (index: number) => setLegs((current) => current.filter((_, i) => i !== index));
   const pickEvento = (option: EventOption) => {
@@ -704,35 +774,47 @@ function ManualEntryModal({ preset: presetInicial, contas, eventos, onClose }: {
               <span className="rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-accent">Etapa 1 de 2</span>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              {TIPOS_REGISTRO.map((tipo) => (
-                <button key={tipo.id} type="button" onClick={() => escolherTipo(tipo.id)} className="group flex min-h-40 flex-col rounded-2xl border border-border bg-surface-2/65 p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-accent/45 hover:bg-accent/[0.06] hover:shadow-[0_16px_36px_rgba(0,0,0,0.2)] sm:p-5">
-                  <span className="flex items-start justify-between gap-3">
-                    <span className={`grid h-10 w-10 place-items-center rounded-xl border ${tipo.id === "aposta" ? "border-info/25 bg-info/10 text-info" : "border-warning/25 bg-warning/10 text-warning"}`}>
-                      {tipo.id === "aposta" ? (
-                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8" /><path d="m8.5 12 2.2 2.2 4.8-5" /></svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="5" width="16" height="14" rx="3" /><path d="M8 9h.01M12 9h.01M16 9h.01M8 14h8" /></svg>
-                      )}
-                    </span>
-                    <span className="rounded-md bg-surface-3 px-2 py-1 font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-muted">{tipo.tag}</span>
-                  </span>
-                  <span className="mt-4 text-base font-black text-text">{tipo.label}</span>
-                  <span className="mt-1 text-xs leading-relaxed text-muted">{tipo.hint}</span>
-                  <span className="mt-auto pt-4 text-xs font-black text-accent">Continuar <span className="inline-block transition-transform group-hover:translate-x-1">→</span></span>
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-accent/20 bg-gradient-to-r from-accent/[0.08] to-transparent p-4 sm:flex-row sm:items-center">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent/12 text-accent">
-                <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 4h14v16H5zM8 8h8M8 12h3M14 12h2M8 16h3M14 16h2" /></svg>
+            {/* O caminho principal: quase toda operação passa pela calculadora. */}
+            <Link
+              href="/calculadora"
+              className="group flex items-center gap-4 rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/[0.13] via-accent/[0.05] to-transparent p-5 transition duration-200 hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-[0_18px_44px_rgba(59,130,246,0.22)] sm:p-6"
+            >
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-accent to-accent-deep text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_8px_22px_rgba(59,130,246,0.4)]">
+                <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 4h14v16H5zM8 8h8M8 12h3M14 12h2M8 16h3M14 16h2" /></svg>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-xs font-black text-text">Surebet, Superodd, missão ou freebet?</span>
-                <span className="mt-0.5 block text-[11px] leading-relaxed text-muted">Monte os valores na calculadora. Ao adicionar à planilha, você escolherá apenas o procedimento da operação.</span>
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-lg font-black text-text">Surebet, Superodd, missão ou freebet</span>
+                  <span className="rounded-md bg-accent/15 px-2 py-0.5 font-mono text-[8px] font-black uppercase tracking-[0.14em] text-accent">Mais usado</span>
+                </span>
+                <span className="mt-1 block text-xs leading-relaxed text-muted">
+                  Monte os valores na calculadora. Ao adicionar à planilha, você escolhe só o procedimento da operação.
+                </span>
+                <span className="mt-3 inline-block text-sm font-black text-accent">
+                  Abrir calculadora <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+                </span>
               </span>
-              <Link href="/calculadora" className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-accent/30 bg-accent/10 px-3 text-xs font-black text-accent transition hover:bg-accent hover:text-accent-ink">Abrir calculadora</Link>
+            </Link>
+
+            {/* Os lançamentos raros ficam compactos, sem roubar a atenção. */}
+            <p className="mb-2 mt-5 font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-muted">Ou lance direto</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {TIPOS_REGISTRO.map((tipo) => (
+                <button key={tipo.id} type="button" onClick={() => escolherTipo(tipo.id)} className="group flex items-center gap-3 rounded-xl border border-border bg-surface-2/50 px-3.5 py-3 text-left transition hover:border-accent/40 hover:bg-accent/[0.05]">
+                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg border ${tipo.id === "aposta" ? "border-info/25 bg-info/10 text-info" : "border-warning/25 bg-warning/10 text-warning"}`}>
+                    {tipo.id === "aposta" ? (
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8" /><path d="m8.5 12 2.2 2.2 4.8-5" /></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="5" width="16" height="14" rx="3" /><path d="M8 9h.01M12 9h.01M16 9h.01M8 14h8" /></svg>
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-bold text-text">{tipo.label}</span>
+                    <span className="block truncate text-[10px] text-muted">{tipo.tag}</span>
+                  </span>
+                  <span className="shrink-0 text-xs font-black text-muted transition group-hover:translate-x-0.5 group-hover:text-accent">→</span>
+                </button>
+              ))}
             </div>
           </div>
           <div className="flex justify-end border-t border-border bg-surface-2/30 px-4 py-3 sm:px-6">
@@ -748,6 +830,7 @@ function ManualEntryModal({ preset: presetInicial, contas, eventos, onClose }: {
         <form action={action} className="space-y-4 p-4 sm:p-5">
           <input type="hidden" name="pernas" value={JSON.stringify(pernasPayload)} />
           <input type="hidden" name="tipo" value={preset === "cassino" ? "OUTRO" : "SUREBET"} />
+          <input type="hidden" name="somarRetornos" value={preset === "cassino" ? "1" : "0"} />
           {preset === "cassino" ? <><input type="hidden" name="evento" value={evento} /><input type="hidden" name="esporte" value={esporte} /></> : null}
           <div className="grid gap-3 sm:grid-cols-2">
             {preset !== "cassino" ? <label className="space-y-1 text-xs font-bold text-text-2">
@@ -776,9 +859,12 @@ function ManualEntryModal({ preset: presetInicial, contas, eventos, onClose }: {
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="mono-label text-muted">{preset === "cassino" ? "Resultado da sessão" : "Entradas"}</p>
-              {preset !== "cassino" && <button type="button" onClick={addLeg} className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-text-2 hover:border-accent hover:text-accent">Adicionar linha</button>}
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="mono-label text-muted">{preset === "cassino" ? "Resultado da sessão" : "Entradas da aposta"}</p>
+                {preset !== "cassino" && <p className="mt-1 text-[11px] text-muted">Preencha uma linha para cada entrada realizada.</p>}
+              </div>
+              {preset !== "cassino" && <button type="button" onClick={addLeg} className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-text-2 hover:border-accent hover:text-accent">+ Adicionar entrada</button>}
             </div>
             {preset === "cassino" ? (
               <div className="space-y-2">
@@ -790,7 +876,7 @@ function ManualEntryModal({ preset: presetInicial, contas, eventos, onClose }: {
                         Casa
                         <select value={leg.casa} onChange={(e) => updateLeg(index, { casa: e.target.value })} className="h-10 w-full min-w-0 rounded-lg border border-border bg-surface px-2 text-sm normal-case tracking-normal text-text outline-none focus:border-accent">
                           <option value="">Sem casa</option>
-                          {casas.map((c) => <option key={c} value={c}>{c}</option>)}
+                          {casasDisponiveis.map((casa) => <option key={casa.name} value={casa.name}>{casa.name}</option>)}
                         </select>
                       </label>
                       <label className="min-w-0 space-y-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">
@@ -817,18 +903,74 @@ function ManualEntryModal({ preset: presetInicial, contas, eventos, onClose }: {
                 </div>
               </div>
             ) : (
-              legs.map((leg, index) => (
-                <div key={index} className="grid min-w-0 gap-2 rounded-lg border border-border bg-surface-2 p-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(80px,0.7fr)_minmax(90px,0.8fr)_auto]">
-                  <select value={leg.casa} onChange={(e) => updateLeg(index, { casa: e.target.value })} className="h-9 min-w-0 rounded-lg border border-border bg-surface px-2 text-sm outline-none focus:border-accent">
-                    <option value="">Sem casa</option>
-                    {casas.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <input value={leg.selecao} onChange={(e) => updateLeg(index, { selecao: e.target.value })} placeholder="Seleção" className="h-9 min-w-0 rounded-lg border border-border bg-surface px-2 text-sm outline-none focus:border-accent" />
-                  <input value={leg.odd} onChange={(e) => updateLeg(index, { odd: e.target.value })} placeholder="Odd" inputMode="decimal" className="h-9 min-w-0 rounded-lg border border-border bg-surface px-2 text-sm font-bold outline-none focus:border-accent" />
-                  <input value={leg.stake} onChange={(e) => updateLeg(index, { stake: e.target.value })} placeholder="Valor" inputMode="decimal" className="h-9 min-w-0 rounded-lg border border-border bg-surface px-2 text-sm font-bold outline-none focus:border-accent" />
-                  <button type="button" onClick={() => removeLeg(index)} disabled={legs.length === 1} className="h-9 rounded-lg px-2 text-xs font-bold text-muted hover:text-negative disabled:opacity-40">Remover</button>
-                </div>
-              ))
+              <div className="space-y-2">
+                {legs.map((leg, index) => {
+                  const casaSelecionada = casasDisponiveis.find((casa) => casa.name === leg.casa);
+                  return (
+                    <div key={index} className="rounded-xl border border-border bg-surface-2/60 p-3">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <span className="flex items-center gap-2 text-xs font-black text-text">
+                          <span className="grid h-6 w-6 place-items-center rounded-lg bg-accent/12 font-mono text-[9px] text-accent">{index + 1}</span>
+                          Entrada {index + 1}
+                        </span>
+                        <button type="button" onClick={() => removeLeg(index)} disabled={legs.length === 1} className="rounded-lg px-2 py-1 text-[11px] font-bold text-muted transition hover:bg-negative/10 hover:text-negative disabled:cursor-not-allowed disabled:opacity-35">Remover</button>
+                      </div>
+
+                      <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(230px,1.35fr)_minmax(90px,0.48fr)_minmax(125px,0.68fr)_minmax(135px,0.72fr)]">
+                        <label className="min-w-0 space-y-1.5">
+                          <span className="mono-label block text-muted">Casa de aposta</span>
+                          <span className="flex min-w-0 items-center gap-2">
+                            <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-surface-3 text-[10px] font-black text-muted shadow-sm">
+                              {casaSelecionada?.logoUrl
+                                ? <img src={casaSelecionada.logoUrl} alt="" className="h-full w-full object-contain p-0.5" />
+                                : leg.casa ? leg.casa.charAt(0).toUpperCase() : "?"}
+                            </span>
+                            <HousePicker
+                              value={leg.casa}
+                              onChange={(casa) => updateLeg(index, { casa })}
+                              houses={casasDisponiveis}
+                              logoFor={(casa) => casasDisponiveis.find((option) => option.name === casa)?.logoUrl ?? null}
+                              placement="top"
+                              placeholder="Busque a casa…"
+                              required
+                            />
+                          </span>
+                        </label>
+
+                        <label className="min-w-0 space-y-1.5">
+                          <span className="mono-label block text-muted">Odd</span>
+                          <input required value={leg.odd} onChange={(e) => updateLeg(index, { odd: e.target.value })} placeholder="2,00" inputMode="decimal" className="h-11 w-full min-w-0 rounded-xl border border-border bg-surface px-3 text-center text-sm font-black tabular-nums outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/10" />
+                        </label>
+
+                        <label className="min-w-0 space-y-1.5">
+                          <span className="mono-label block text-muted">Valor apostado</span>
+                          <span className="flex h-11 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/10">
+                            <span className="text-xs font-bold text-muted">R$</span>
+                            <input required value={leg.stake} onChange={(e) => updateLeg(index, { stake: e.target.value })} placeholder="100,00" inputMode="decimal" className="h-full w-full min-w-0 bg-transparent text-right text-sm font-black tabular-nums outline-none" />
+                          </span>
+                        </label>
+
+                        <label className="min-w-0 space-y-1.5">
+                          <span className="mono-label block text-muted">Valor que volta</span>
+                          <span className="flex h-11 items-center gap-1.5 rounded-xl border border-positive/25 bg-positive/[0.05] px-3 transition focus-within:border-positive/60 focus-within:ring-2 focus-within:ring-positive/10">
+                            <span className="text-xs font-bold text-positive/70">R$</span>
+                            <input
+                              required
+                              value={leg.retorno ?? retornoSimplesInput(leg)}
+                              onChange={(e) => updateLeg(index, { retorno: e.target.value })}
+                              onFocus={(e) => e.target.select()}
+                              placeholder="200,00"
+                              inputMode="decimal"
+                              title="Calculado automaticamente por valor apostado × odd; você pode ajustar."
+                              className="h-full w-full min-w-0 bg-transparent text-right text-sm font-black tabular-nums text-positive outline-none"
+                            />
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 

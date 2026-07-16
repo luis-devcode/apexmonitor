@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import EventCombo from "@/components/EventCombo";
+import HousePicker from "@/components/HousePicker";
 import SalvarPlanilhaModal from "@/components/SalvarPlanilhaModal";
 import type { EventOption } from "@/lib/event-options";
 import { housesForSelect } from "@/lib/houses";
@@ -36,7 +37,6 @@ const num = (v: string | number, fallback = 0) => {
   return Number.isFinite(n) ? n : fallback;
 };
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-const pretty = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase());
 const normName = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
 const pad = (value: number) => String(value).padStart(2, "0");
 const dataInputValue = () => {
@@ -318,7 +318,10 @@ export default function SurebetCalculator({ seed, selection, className = "", var
     freebet: row.freebet,
     // A comissão só conta se o toggle estiver ligado — igual ao solver.
     comissao: toggles.comissoes ? row.comm : "0",
-  })), [rows, numHouses, toggles.comissoes]);
+    // O aumento também precisa seguir o toggle. Sem enviá-lo, a planilha
+    // recalcula pela odd pura e transforma um cenário positivo em negativo.
+    aumento: toggles.aumento ? row.aumento : "0",
+  })), [rows, numHouses, toggles.comissoes, toggles.aumento]);
   const pickEvento = (option: EventOption) => {
     setEvento(option.label);
     setEsporte(option.sport || "Futebol");
@@ -714,90 +717,6 @@ function LiveNumberInput({
       className={className}
       title={title}
     />
-  );
-}
-
-/** Seletor de casa com busca: digita e vai filtrando (em vez de rolar 150 opções). */
-function HousePicker({
-  value,
-  onChange,
-  houses,
-  logoFor,
-  size = "md",
-}: {
-  value: string;
-  onChange: (name: string) => void;
-  houses: { name: string; logoUrl: string | null }[];
-  logoFor: (name: string) => string | null;
-  size?: "sm" | "md" | "lg";
-}) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const selectedLabel = value ? pretty(value) : "";
-
-  useEffect(() => {
-    const onDoc = (e: MouseEvent) => { if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
-
-  const results = useMemo(() => {
-    const q = normName(query.trim());
-    // Ao abrir sem digitar (ou com o nome já escolhido), mostra a lista toda.
-    const digitando = q && q !== normName(value);
-    const list = digitando ? houses.filter((h) => normName(h.name).includes(q)) : houses;
-    return list.slice(0, 80);
-  }, [houses, query, value]);
-
-  const pick = (name: string) => { onChange(name); setQuery(pretty(name)); setOpen(false); };
-
-  const h = size === "sm" ? "h-10 text-xs" : size === "lg" ? "h-11 text-sm" : "h-11 text-[13px]";
-
-  return (
-    <div className="relative min-w-0 flex-1" ref={wrapRef}>
-      <input
-        value={open ? query : selectedLabel}
-        onChange={(e) => { setQuery(e.target.value); setOpen(true); setActive(0); }}
-        onFocus={(e) => { setQuery(selectedLabel); setOpen(true); e.target.select(); }}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); setActive((a) => Math.min(a + 1, results.length - 1)); }
-          else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
-          else if (e.key === "Enter" && open && results[active]) { e.preventDefault(); pick(results[active].name); }
-          else if (e.key === "Escape") setOpen(false);
-        }}
-        placeholder="Digite a casa…"
-        autoComplete="off"
-        spellCheck={false}
-        className={`${h} w-full min-w-0 rounded-xl border border-border bg-surface-2 px-3 font-semibold outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/10`}
-      />
-      {open && (
-        <div className="absolute z-50 mt-1 max-h-64 w-full min-w-[200px] overflow-y-auto rounded-xl border border-border bg-surface p-1 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
-          {results.length === 0 ? (
-            <p className="px-3 py-3 text-xs text-muted">Nenhuma casa encontrada.</p>
-          ) : results.map((house, i) => {
-            const logo = logoFor(house.name);
-            return (
-              <button
-                key={house.name}
-                type="button"
-                onClick={() => pick(house.name)}
-                onMouseEnter={() => setActive(i)}
-                className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors ${
-                  i === active ? "bg-accent/12 text-accent" : value === house.name ? "text-accent" : "text-text-2 hover:bg-white/5"
-                }`}
-              >
-                {logo
-                  ? <img src={logo} alt="" className="h-5 w-5 shrink-0 rounded bg-surface-3 object-contain" />
-                  : <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-surface-3 text-[8px] font-bold text-muted">{house.name.charAt(0).toUpperCase()}</span>}
-                <span className="truncate">{pretty(house.name)}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
   );
 }
 

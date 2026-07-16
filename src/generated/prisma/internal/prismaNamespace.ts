@@ -1385,6 +1385,7 @@ export const PernaOperacaoScalarFieldEnum = {
   stake: 'stake',
   isLay: 'isLay',
   comissaoPct: 'comissaoPct',
+  aumentoPct: 'aumentoPct',
   freebet: 'freebet',
   risco: 'risco',
   resultado: 'resultado',

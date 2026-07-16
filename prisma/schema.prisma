@@ -183,6 +183,9 @@ model PernaOperacao {
   // Comissão da casa/exchange (%). Sai do lucro no fechamento — sem ela o lay
   // fecha com lucro maior do que o real.
   comissaoPct Float    @default(0)
+  // Aumento aplicado ao ganho desta entrada (ex.: boost de 15%). Precisa ficar
+  // salvo para a planilha reproduzir o mesmo retorno da calculadora.
+  aumentoPct  Float    @default(0)
   freebet    Boolean   @default(false)
   risco      Float     @default(0)
   resultado  String    @default("PENDENTE")

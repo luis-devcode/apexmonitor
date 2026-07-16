@@ -7,8 +7,8 @@ import { readCloneGroups } from "@/lib/odds-feed";
 import { prisma } from "@/lib/prisma";
 import { isProcedimento, tipoDoProcedimento } from "@/lib/procedimentos";
 
-type RawLeg = { casa?: unknown; selecao?: unknown; odd?: unknown; stake?: unknown; retorno?: unknown; isLay?: unknown; freebet?: unknown; comissao?: unknown };
-type Perna = { stake: number; odd: number; isLay: boolean; freebet: boolean; comissaoPct: number; risco: number };
+type RawLeg = { casa?: unknown; selecao?: unknown; odd?: unknown; stake?: unknown; retorno?: unknown; isLay?: unknown; freebet?: unknown; comissao?: unknown; aumento?: unknown };
+type Perna = { stake: number; odd: number; isLay: boolean; freebet: boolean; comissaoPct: number; aumentoPct: number; risco: number };
 
 /**
  * O quanto a perna realmente ARRISCA (o que sai do bolso).
@@ -30,11 +30,12 @@ function riscoDaPerna(stake: number, odd: number, isLay: boolean, freebet: boole
  *  - LAY:     responsabilidade de volta + a stake do apostador, menos comissão.
  *  - FREEBET: a stake é da casa, então volta só o lucro líquido.
  */
-function retornoDaPerna(perna: Pick<Perna, "stake" | "odd" | "isLay" | "freebet" | "comissaoPct">) {
+function retornoDaPerna(perna: Pick<Perna, "stake" | "odd" | "isLay" | "freebet" | "comissaoPct" | "aumentoPct">) {
   const { stake, odd, isLay, freebet } = perna;
   const comm = Math.min(Math.max(perna.comissaoPct, 0), 100) / 100;
-  if (isLay) return stake * Math.max(0, odd - 1) + stake * (1 - comm);
-  const lucro = stake * Math.max(0, odd - 1) * (1 - comm);
+  const aumento = Math.max(perna.aumentoPct, 0) / 100;
+  if (isLay) return stake * Math.max(0, odd - 1) + stake * (1 - comm) * (1 + aumento);
+  const lucro = stake * Math.max(0, odd - 1) * (1 + aumento) * (1 - comm);
   return freebet ? lucro : stake + lucro;
 }
 
@@ -80,6 +81,7 @@ export async function criarOperacaoAction(
   // Conta/CPF escolhida na janela, por índice de perna. Freebet extraída, se houver.
   const contaPorPerna = parseJson<(string | null)[]>(formData.get("contas")) ?? [];
   const freebetId = String(formData.get("freebetId") ?? "").trim() || null;
+  const somarRetornos = String(formData.get("somarRetornos") ?? "") === "1";
 
   if (!evento) return "Informe o evento da operação.";
   if (Number.isNaN(data.getTime())) return "Data do evento inválida.";
@@ -94,6 +96,7 @@ export async function criarOperacaoAction(
     const isLay = leg.isLay === true || leg.isLay === "true";
     const freebet = leg.freebet === true || leg.freebet === "true";
     const comissaoPct = Math.min(Math.max(localizedNumber(leg.comissao) || 0, 0), 100);
+    const aumentoPct = Math.max(localizedNumber(leg.aumento) || 0, 0);
     return {
       casa: String(leg.casa ?? "").trim() || null,
       selecao: String(leg.selecao ?? "").trim() || "—",
@@ -102,8 +105,9 @@ export async function criarOperacaoAction(
       isLay,
       freebet,
       comissaoPct,
+      aumentoPct,
       risco: round(riscoDaPerna(stake, odd, isLay, freebet)),
-      retorno: retornoManual ?? retornoDaPerna({ stake, odd, isLay, freebet, comissaoPct }),
+      retorno: retornoManual ?? retornoDaPerna({ stake, odd, isLay, freebet, comissaoPct, aumentoPct }),
       retornoManual,
     };
   });
@@ -120,7 +124,7 @@ export async function criarOperacaoAction(
 
   // O "investido" é a soma do RISCO (não das stakes) — no lay é a responsabilidade.
   const stakeTotal = round(legs.reduce((sum, leg) => sum + leg.risco, 0));
-  const retornoEsperado = legs.every((leg) => leg.retornoManual !== null)
+  const retornoEsperado = somarRetornos && legs.every((leg) => leg.retornoManual !== null)
     ? legs.reduce((sum, leg) => sum + leg.retorno, 0)
     : Math.min(...legs.map((leg) => leg.retorno));
   const lucroEsperado = round(retornoEsperado - stakeTotal);
@@ -153,6 +157,7 @@ export async function criarOperacaoAction(
             isLay: leg.isLay,
             freebet: leg.freebet,
             comissaoPct: leg.comissaoPct,
+            aumentoPct: leg.aumentoPct,
             risco: leg.risco,
             retorno: leg.retornoManual,
           };

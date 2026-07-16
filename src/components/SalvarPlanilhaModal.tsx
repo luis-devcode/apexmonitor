@@ -16,6 +16,7 @@ export type PlanilhaLeg = {
   isLay: boolean;
   freebet: boolean;
   comissao: string;
+  aumento: string;
 };
 type ContaOption = { id: string; casa: string; parceiro: string; saldo: number };
 type FreebetOption = { id: string; casa: string; casaLogo: string | null; parceiro: string | null; valor: number; expiraEm: string | null };
@@ -219,6 +220,7 @@ export default function SalvarPlanilhaModal({
                           {leg.casa || "Sem casa"}
                           {leg.isLay && <span className="rounded bg-negative/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-negative">Lay</span>}
                           {leg.freebet && <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-accent">Freebet</span>}
+                          {num(leg.aumento) > 0 && <span className="rounded bg-info/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-info">+{num(leg.aumento).toLocaleString("pt-BR")}%</span>}
                         </span>
                         <span className="block truncate text-[11px] text-muted">{leg.selecao} · @{leg.odd} · {brl(risco)}</span>
                       </span>

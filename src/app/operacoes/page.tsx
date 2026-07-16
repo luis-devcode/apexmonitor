@@ -59,6 +59,7 @@ export default async function PlanilhaPage({ searchParams }: { searchParams: Pro
       isLay: p.isLay,
       freebet: p.freebet,
       comissaoPct: p.comissaoPct,
+      aumentoPct: p.aumentoPct,
       // Fallback pras pernas antigas, salvas antes do campo existir.
       risco: p.freebet ? 0 : p.risco > 0 ? p.risco : (p.isLay ? p.stake * Math.max(0, p.odd - 1) : p.stake),
       resultado: p.resultado,

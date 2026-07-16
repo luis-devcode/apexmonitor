@@ -30,6 +30,7 @@ export type PernaOperacaoAvgAggregateOutputType = {
   odd: number | null
   stake: number | null
   comissaoPct: number | null
+  aumentoPct: number | null
   risco: number | null
   retorno: number | null
 }
@@ -38,6 +39,7 @@ export type PernaOperacaoSumAggregateOutputType = {
   odd: number | null
   stake: number | null
   comissaoPct: number | null
+  aumentoPct: number | null
   risco: number | null
   retorno: number | null
 }
@@ -52,6 +54,7 @@ export type PernaOperacaoMinAggregateOutputType = {
   stake: number | null
   isLay: boolean | null
   comissaoPct: number | null
+  aumentoPct: number | null
   freebet: boolean | null
   risco: number | null
   resultado: string | null
@@ -71,6 +74,7 @@ export type PernaOperacaoMaxAggregateOutputType = {
   stake: number | null
   isLay: boolean | null
   comissaoPct: number | null
+  aumentoPct: number | null
   freebet: boolean | null
   risco: number | null
   resultado: string | null
@@ -90,6 +94,7 @@ export type PernaOperacaoCountAggregateOutputType = {
   stake: number
   isLay: number
   comissaoPct: number
+  aumentoPct: number
   freebet: number
   risco: number
   resultado: number
@@ -105,6 +110,7 @@ export type PernaOperacaoAvgAggregateInputType = {
   odd?: true
   stake?: true
   comissaoPct?: true
+  aumentoPct?: true
   risco?: true
   retorno?: true
 }
@@ -113,6 +119,7 @@ export type PernaOperacaoSumAggregateInputType = {
   odd?: true
   stake?: true
   comissaoPct?: true
+  aumentoPct?: true
   risco?: true
   retorno?: true
 }
@@ -127,6 +134,7 @@ export type PernaOperacaoMinAggregateInputType = {
   stake?: true
   isLay?: true
   comissaoPct?: true
+  aumentoPct?: true
   freebet?: true
   risco?: true
   resultado?: true
@@ -146,6 +154,7 @@ export type PernaOperacaoMaxAggregateInputType = {
   stake?: true
   isLay?: true
   comissaoPct?: true
+  aumentoPct?: true
   freebet?: true
   risco?: true
   resultado?: true
@@ -165,6 +174,7 @@ export type PernaOperacaoCountAggregateInputType = {
   stake?: true
   isLay?: true
   comissaoPct?: true
+  aumentoPct?: true
   freebet?: true
   risco?: true
   resultado?: true
@@ -271,6 +281,7 @@ export type PernaOperacaoGroupByOutputType = {
   stake: number
   isLay: boolean
   comissaoPct: number
+  aumentoPct: number
   freebet: boolean
   risco: number
   resultado: string
@@ -313,6 +324,7 @@ export type PernaOperacaoWhereInput = {
   stake?: Prisma.FloatFilter<"PernaOperacao"> | number
   isLay?: Prisma.BoolFilter<"PernaOperacao"> | boolean
   comissaoPct?: Prisma.FloatFilter<"PernaOperacao"> | number
+  aumentoPct?: Prisma.FloatFilter<"PernaOperacao"> | number
   freebet?: Prisma.BoolFilter<"PernaOperacao"> | boolean
   risco?: Prisma.FloatFilter<"PernaOperacao"> | number
   resultado?: Prisma.StringFilter<"PernaOperacao"> | string
@@ -335,6 +347,7 @@ export type PernaOperacaoOrderByWithRelationInput = {
   stake?: Prisma.SortOrder
   isLay?: Prisma.SortOrder
   comissaoPct?: Prisma.SortOrder
+  aumentoPct?: Prisma.SortOrder
   freebet?: Prisma.SortOrder
   risco?: Prisma.SortOrder
   resultado?: Prisma.SortOrder
@@ -360,6 +373,7 @@ export type PernaOperacaoWhereUniqueInput = Prisma.AtLeast<{
   stake?: Prisma.FloatFilter<"PernaOperacao"> | number
   isLay?: Prisma.BoolFilter<"PernaOperacao"> | boolean
   comissaoPct?: Prisma.FloatFilter<"PernaOperacao"> | number
+  aumentoPct?: Prisma.FloatFilter<"PernaOperacao"> | number
   freebet?: Prisma.BoolFilter<"PernaOperacao"> | boolean
   risco?: Prisma.FloatFilter<"PernaOperacao"> | number
   resultado?: Prisma.StringFilter<"PernaOperacao"> | string
@@ -382,6 +396,7 @@ export type PernaOperacaoOrderByWithAggregationInput = {
   stake?: Prisma.SortOrder
   isLay?: Prisma.SortOrder
   comissaoPct?: Prisma.SortOrder
+  aumentoPct?: Prisma.SortOrder
   freebet?: Prisma.SortOrder
   risco?: Prisma.SortOrder
   resultado?: Prisma.SortOrder
@@ -409,6 +424,7 @@ export type PernaOperacaoScalarWhereWithAggregatesInput = {
   stake?: Prisma.FloatWithAggregatesFilter<"PernaOperacao"> | number
   isLay?: Prisma.BoolWithAggregatesFilter<"PernaOperacao"> | boolean
   comissaoPct?: Prisma.FloatWithAggregatesFilter<"PernaOperacao"> | number
+  aumentoPct?: Prisma.FloatWithAggregatesFilter<"PernaOperacao"> | number
   freebet?: Prisma.BoolWithAggregatesFilter<"PernaOperacao"> | boolean
   risco?: Prisma.FloatWithAggregatesFilter<"PernaOperacao"> | number
   resultado?: Prisma.StringWithAggregatesFilter<"PernaOperacao"> | string
@@ -426,6 +442,7 @@ export type PernaOperacaoCreateInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -447,6 +464,7 @@ export type PernaOperacaoUncheckedCreateInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -464,6 +482,7 @@ export type PernaOperacaoUpdateInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -485,6 +504,7 @@ export type PernaOperacaoUncheckedUpdateInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -504,6 +524,7 @@ export type PernaOperacaoCreateManyInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -521,6 +542,7 @@ export type PernaOperacaoUpdateManyMutationInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -539,6 +561,7 @@ export type PernaOperacaoUncheckedUpdateManyInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -568,6 +591,7 @@ export type PernaOperacaoCountOrderByAggregateInput = {
   stake?: Prisma.SortOrder
   isLay?: Prisma.SortOrder
   comissaoPct?: Prisma.SortOrder
+  aumentoPct?: Prisma.SortOrder
   freebet?: Prisma.SortOrder
   risco?: Prisma.SortOrder
   resultado?: Prisma.SortOrder
@@ -581,6 +605,7 @@ export type PernaOperacaoAvgOrderByAggregateInput = {
   odd?: Prisma.SortOrder
   stake?: Prisma.SortOrder
   comissaoPct?: Prisma.SortOrder
+  aumentoPct?: Prisma.SortOrder
   risco?: Prisma.SortOrder
   retorno?: Prisma.SortOrder
 }
@@ -595,6 +620,7 @@ export type PernaOperacaoMaxOrderByAggregateInput = {
   stake?: Prisma.SortOrder
   isLay?: Prisma.SortOrder
   comissaoPct?: Prisma.SortOrder
+  aumentoPct?: Prisma.SortOrder
   freebet?: Prisma.SortOrder
   risco?: Prisma.SortOrder
   resultado?: Prisma.SortOrder
@@ -614,6 +640,7 @@ export type PernaOperacaoMinOrderByAggregateInput = {
   stake?: Prisma.SortOrder
   isLay?: Prisma.SortOrder
   comissaoPct?: Prisma.SortOrder
+  aumentoPct?: Prisma.SortOrder
   freebet?: Prisma.SortOrder
   risco?: Prisma.SortOrder
   resultado?: Prisma.SortOrder
@@ -627,6 +654,7 @@ export type PernaOperacaoSumOrderByAggregateInput = {
   odd?: Prisma.SortOrder
   stake?: Prisma.SortOrder
   comissaoPct?: Prisma.SortOrder
+  aumentoPct?: Prisma.SortOrder
   risco?: Prisma.SortOrder
   retorno?: Prisma.SortOrder
 }
@@ -765,6 +793,7 @@ export type PernaOperacaoCreateWithoutUserInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -785,6 +814,7 @@ export type PernaOperacaoUncheckedCreateWithoutUserInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -831,6 +861,7 @@ export type PernaOperacaoScalarWhereInput = {
   stake?: Prisma.FloatFilter<"PernaOperacao"> | number
   isLay?: Prisma.BoolFilter<"PernaOperacao"> | boolean
   comissaoPct?: Prisma.FloatFilter<"PernaOperacao"> | number
+  aumentoPct?: Prisma.FloatFilter<"PernaOperacao"> | number
   freebet?: Prisma.BoolFilter<"PernaOperacao"> | boolean
   risco?: Prisma.FloatFilter<"PernaOperacao"> | number
   resultado?: Prisma.StringFilter<"PernaOperacao"> | string
@@ -848,6 +879,7 @@ export type PernaOperacaoCreateWithoutContaInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -867,6 +899,7 @@ export type PernaOperacaoUncheckedCreateWithoutContaInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -909,6 +942,7 @@ export type PernaOperacaoCreateWithoutOperacaoInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -928,6 +962,7 @@ export type PernaOperacaoUncheckedCreateWithoutOperacaoInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -972,6 +1007,7 @@ export type PernaOperacaoCreateManyUserInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -988,6 +1024,7 @@ export type PernaOperacaoUpdateWithoutUserInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1008,6 +1045,7 @@ export type PernaOperacaoUncheckedUpdateWithoutUserInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1026,6 +1064,7 @@ export type PernaOperacaoUncheckedUpdateManyWithoutUserInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1043,6 +1082,7 @@ export type PernaOperacaoCreateManyContaInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -1060,6 +1100,7 @@ export type PernaOperacaoUpdateWithoutContaInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1079,6 +1120,7 @@ export type PernaOperacaoUncheckedUpdateWithoutContaInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1097,6 +1139,7 @@ export type PernaOperacaoUncheckedUpdateManyWithoutContaInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1115,6 +1158,7 @@ export type PernaOperacaoCreateManyOperacaoInput = {
   stake: number
   isLay?: boolean
   comissaoPct?: number
+  aumentoPct?: number
   freebet?: boolean
   risco?: number
   resultado?: string
@@ -1132,6 +1176,7 @@ export type PernaOperacaoUpdateWithoutOperacaoInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1151,6 +1196,7 @@ export type PernaOperacaoUncheckedUpdateWithoutOperacaoInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1169,6 +1215,7 @@ export type PernaOperacaoUncheckedUpdateManyWithoutOperacaoInput = {
   stake?: Prisma.FloatFieldUpdateOperationsInput | number
   isLay?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
+  aumentoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   freebet?: Prisma.BoolFieldUpdateOperationsInput | boolean
   risco?: Prisma.FloatFieldUpdateOperationsInput | number
   resultado?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1190,6 +1237,7 @@ export type PernaOperacaoSelect<ExtArgs extends runtime.Types.Extensions.Interna
   stake?: boolean
   isLay?: boolean
   comissaoPct?: boolean
+  aumentoPct?: boolean
   freebet?: boolean
   risco?: boolean
   resultado?: boolean
@@ -1212,6 +1260,7 @@ export type PernaOperacaoSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   stake?: boolean
   isLay?: boolean
   comissaoPct?: boolean
+  aumentoPct?: boolean
   freebet?: boolean
   risco?: boolean
   resultado?: boolean
@@ -1234,6 +1283,7 @@ export type PernaOperacaoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   stake?: boolean
   isLay?: boolean
   comissaoPct?: boolean
+  aumentoPct?: boolean
   freebet?: boolean
   risco?: boolean
   resultado?: boolean
@@ -1256,6 +1306,7 @@ export type PernaOperacaoSelectScalar = {
   stake?: boolean
   isLay?: boolean
   comissaoPct?: boolean
+  aumentoPct?: boolean
   freebet?: boolean
   risco?: boolean
   resultado?: boolean
@@ -1265,7 +1316,7 @@ export type PernaOperacaoSelectScalar = {
   userId?: boolean
 }
 
-export type PernaOperacaoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "operacaoId" | "casa" | "contaId" | "selecao" | "odd" | "stake" | "isLay" | "comissaoPct" | "freebet" | "risco" | "resultado" | "retorno" | "createdAt" | "updatedAt" | "userId", ExtArgs["result"]["pernaOperacao"]>
+export type PernaOperacaoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "operacaoId" | "casa" | "contaId" | "selecao" | "odd" | "stake" | "isLay" | "comissaoPct" | "aumentoPct" | "freebet" | "risco" | "resultado" | "retorno" | "createdAt" | "updatedAt" | "userId", ExtArgs["result"]["pernaOperacao"]>
 export type PernaOperacaoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   operacao?: boolean | Prisma.OperacaoDefaultArgs<ExtArgs>
   conta?: boolean | Prisma.PernaOperacao$contaArgs<ExtArgs>
@@ -1299,6 +1350,7 @@ export type $PernaOperacaoPayload<ExtArgs extends runtime.Types.Extensions.Inter
     stake: number
     isLay: boolean
     comissaoPct: number
+    aumentoPct: number
     freebet: boolean
     risco: number
     resultado: string
@@ -1741,6 +1793,7 @@ export interface PernaOperacaoFieldRefs {
   readonly stake: Prisma.FieldRef<"PernaOperacao", 'Float'>
   readonly isLay: Prisma.FieldRef<"PernaOperacao", 'Boolean'>
   readonly comissaoPct: Prisma.FieldRef<"PernaOperacao", 'Float'>
+  readonly aumentoPct: Prisma.FieldRef<"PernaOperacao", 'Float'>
   readonly freebet: Prisma.FieldRef<"PernaOperacao", 'Boolean'>
   readonly risco: Prisma.FieldRef<"PernaOperacao", 'Float'>
   readonly resultado: Prisma.FieldRef<"PernaOperacao", 'String'>
