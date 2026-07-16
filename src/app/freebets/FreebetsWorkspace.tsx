@@ -79,7 +79,8 @@ function Modal({ title, subtitle, onClose, children }: { title: string; subtitle
 }
 
 export default function FreebetsWorkspace({ freebets, parceiros, houses, procedimentos }: { freebets: Freebet[]; parceiros: ParceiroOption[]; houses: HouseOption[]; procedimentos: string[] }) {
-  const [tab, setTab] = useState<"todas" | "URGENTE" | "PENDENTE" | "EXTRAIDA" | "EXPIRADA">("todas");
+  // Abre nas Disponíveis — é a lista que a pessoa usa pra trabalhar.
+  const [tab, setTab] = useState<"todas" | "URGENTE" | "PENDENTE" | "EXTRAIDA" | "EXPIRADA">("PENDENTE");
   const [filtroCasa, setFiltroCasa] = useState("");
   const [filtroParceiro, setFiltroParceiro] = useState("");
   const [addOpen, setAddOpen] = useState(false);
@@ -141,11 +142,12 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
     });
   }, [freebets, tab, filtroCasa, filtroParceiro]);
 
+  // O que interessa no dia a dia vem primeiro: as freebets que ainda dá pra usar.
   const TABS: { key: typeof tab; label: string; count: number }[] = [
-    { key: "todas", label: "Todas", count: freebets.length },
-    { key: "URGENTE", label: "Urgentes", count: stats.urgentes },
     { key: "PENDENTE", label: "Disponíveis", count: stats.disponiveis },
+    { key: "todas", label: "Todas", count: freebets.length },
     { key: "EXTRAIDA", label: "Extraídas", count: stats.extraidasCount },
+    { key: "URGENTE", label: "Urgentes", count: stats.urgentes },
     { key: "EXPIRADA", label: "Expiradas", count: stats.expiradas },
   ];
   const temFiltro = filtroCasa || filtroParceiro;
