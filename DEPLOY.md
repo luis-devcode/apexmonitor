@@ -124,26 +124,20 @@ nano integrations/monitorodds/.env   # MO_EMAIL, MO_PASS
 > Esta é a única mudança de código do deploy. Não foi feita no dev porque não há
 > Postgres local pra testar; aqui, contra o banco real, ela é testada na hora.
 
-1. Em `prisma/schema.prisma`, troque o provider:
-   ```prisma
-   datasource db {
-     provider = "postgresql"   // era "sqlite"
-   }
-   ```
-2. Em `src/lib/prisma.ts`, troque o adapter better-sqlite3 pelo de Postgres:
-   ```bash
-   npm install @prisma/adapter-pg pg
-   npm uninstall @prisma/adapter-better-sqlite3
-   ```
-   ```ts
-   import { PrismaPg } from "@prisma/adapter-pg";
-   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-   ```
-3. Gere o client e crie as tabelas no Postgres:
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   ```
+**✅ Já feito e commitado** (`c712751`). O repositório inteiro é Postgres: o Prisma
+não aceita provider por variável de ambiente, então SQLite no dev exigiria manter
+o repositório e o servidor permanentemente diferentes. Consequência: rodar o
+projeto localmente precisa de um Postgres na máquina.
+
+No servidor, só resta gerar o client e criar as tabelas:
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+> `db push` no Prisma 7 **não tem** `--skip-generate`, e lê a URL do
+> `prisma.config.ts` (não do bloco `datasource`, que não tem `url` no modo
+> driver adapter).
 
 ## Passo 5 — Build
 
@@ -153,32 +147,55 @@ npm run build
 
 ## Passo 6 — Rodar app e coletor como serviços (sempre-ligados)
 
+**Não rode como root.** O app fica exposto na internet e guarda CPF e senha de casa
+de aposta; se uma dependência do Node tiver uma falha de execução remota, root é a
+diferença entre "invadiram o app" e "invadiram o servidor".
+
+```bash
+useradd --system --home-dir /opt/apexmonitor --shell /usr/sbin/nologin apexmonitor
+chown -R apexmonitor:apexmonitor /opt/apexmonitor
+chmod 600 /opt/apexmonitor/.env /opt/apexmonitor/integrations/monitorodds/.env
+```
+
 Crie `/etc/systemd/system/apexmonitor.service`:
 ```ini
 [Unit]
 Description=ApexMonitor (app)
 After=network.target postgresql.service
+Requires=postgresql.service
 [Service]
+Type=simple
+User=apexmonitor
+Group=apexmonitor
 WorkingDirectory=/opt/apexmonitor
-ExecStart=/usr/bin/npm run start
-Restart=always
 EnvironmentFile=/opt/apexmonitor/.env
+# -H 127.0.0.1: sem isto o Next escuta em 0.0.0.0 e a porta 3000 fica alcançável
+# de fora, contornando o HTTPS do Caddy.
+ExecStart=/usr/bin/npm run start -- -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/apexmonitor
 [Install]
 WantedBy=multi-user.target
 ```
 
-Crie `/etc/systemd/system/apexmonitor-coletor.service`:
-```ini
-[Unit]
-Description=ApexMonitor (coletor)
-After=network.target
-[Service]
-WorkingDirectory=/opt/apexmonitor
-ExecStart=/usr/bin/npm run collector
-Restart=always
-[Install]
-WantedBy=multi-user.target
-```
+Crie `/etc/systemd/system/apexmonitor-coletor.service` (mesmo cabeçalho de
+segurança, `ExecStart=/usr/bin/npm run collector`, `RestartSec=10`).
+
+> **Teste o login do MonitorOdds ANTES de habilitar o coletor.** Com credencial
+> inválida ele tenta autenticar a cada 5s e o MonitorOdds bloqueia o IP por 30
+> minutos — e `Restart=always` faz isso sozinho, indefinidamente:
+> ```bash
+> cd /opt/apexmonitor/integrations/monitorodds
+> node --env-file=.env -e 'fetch("https://app.monitorodds.com.br/api/auth/login",{
+>   method:"POST",headers:{"Content-Type":"application/json"},
+>   body:JSON.stringify({email:process.env.MO_EMAIL,password:process.env.MO_PASS})
+> }).then(r=>console.log(r.status))'   # tem que ser 200
+> ```
 
 ```bash
 systemctl daemon-reload
@@ -199,11 +216,35 @@ systemctl reload caddy
 Aponte o DNS do domínio (registro A) para o IP do VPS. O Caddy emite o certificado
 HTTPS sozinho.
 
-**Ordem importa com a Cloudflare.** Suba o DNS primeiro **sem o proxy** (nuvem
-cinza) e deixe o Caddy emitir o certificado — com o proxy ligado antes disso, o
-desafio do Let's Encrypt pode falhar. Só depois ligue o proxy (nuvem laranja) e
-ponha o SSL em **Full (strict)**. É o proxy que traz o ganho de latência para o
-Brasil (handshake em São Paulo + cache dos estáticos).
+### ⚠️ DNSSEC — desligue ANTES de trocar os nameservers
+
+Domínio `.com.br` novo **nasce com DNSSEC ligado**: enquanto o DNS é do registro.br,
+eles assinam a zona automaticamente e publicam o DS. Não existe botão de "desligar"
+porque é automático — e é fácil concluir que está desligado.
+
+Se os nameservers virarem para a Cloudflare com o DS ainda publicado, **o domínio
+some da internet**: os resolvedores exigem uma assinatura que a Cloudflare não tem.
+O sintoma é "domínio não existe", que parece problema de registro, não de config.
+
+Ordem correta: **DNSSEC primeiro, nameservers depois.** No registro.br, em
+*Alterar servidores DNS*, existe um botão `+ DNSSEC` — ele **adiciona** assinatura.
+Deixe-o em paz: sair dos servidores deles sem informar DS remove o antigo.
+
+Confira antes de considerar pronto (tem que vir vazio):
+```bash
+dig +short DS SEU_DOMINIO @a.dns.br
+dig +short DS SEU_DOMINIO @8.8.8.8
+```
+
+### Ordem do Caddy e da Cloudflare
+
+**Só recarregue o Caddy depois que o DNS resolver para o IP do VPS.** Com o domínio
+apontando para o lugar errado, ele falha a validação em loop e queima a cota de
+tentativas do Let's Encrypt — o mesmo erro do coletor, com o certificado no lugar.
+
+Suba o DNS **sem o proxy** (nuvem cinza), deixe o Caddy emitir o certificado, e só
+então ligue o proxy (nuvem laranja) com SSL em **Full (strict)**. É o proxy que traz
+o ganho de latência para o Brasil (handshake em São Paulo + cache dos estáticos).
 
 ## Passo 8 — Criar seu administrador
 
