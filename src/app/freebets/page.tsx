@@ -22,6 +22,7 @@ export default async function FreebetsPage() {
     casaNome: f.casa?.nome ?? "—",
     casaLogo: f.casa?.logoUrl || logoForHouse(cloneLogo, f.casa?.nome),
     parceiroNome: f.parceiro?.nome ?? null,
+    parceiroId: f.parceiroId,
     valor: f.valor,
     tipo: f.tipo,
     procedimento: f.procedimento,

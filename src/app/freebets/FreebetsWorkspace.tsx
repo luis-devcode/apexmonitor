@@ -5,13 +5,15 @@
 import { useActionState, useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import DateField from "@/components/DateField";
 import AppModal from "@/components/AppModal";
-import { addFreebetAction, deleteFreebetAction, setFreebetExtraidoAction, setFreebetStatusAction } from "./actions";
+import { addFreebetAction, deleteFreebetAction, editarFreebetAction, setFreebetExtraidoAction, setFreebetStatusAction } from "./actions";
 
 type Freebet = {
   id: string;
   casaNome: string;
   casaLogo: string | null;
   parceiroNome: string | null;
+  // Necessário pra pré-selecionar o parceiro ao editar (o nome não serve de chave).
+  parceiroId: string | null;
   valor: number;
   tipo: string | null;
   procedimento: string | null;
@@ -81,6 +83,8 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
   const [filtroCasa, setFiltroCasa] = useState("");
   const [filtroParceiro, setFiltroParceiro] = useState("");
   const [addOpen, setAddOpen] = useState(false);
+  // Freebet sendo editada (null = ninguém). Reaproveita o mesmo modal do cadastro.
+  const [editando, setEditando] = useState<Freebet | null>(null);
 
   const stats = useMemo(() => {
     const pendentes = freebets.filter((f) => f.status === "PENDENTE");
@@ -241,16 +245,27 @@ export default function FreebetsWorkspace({ freebets, parceiros, houses, procedi
         <div className="rounded-2xl border border-border bg-surface px-6 py-16 text-center text-sm text-muted">Nenhuma freebet com esses filtros.</div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {filtradas.map((f) => <FreebetCard key={f.id} freebet={f} />)}
+          {filtradas.map((f) => <FreebetCard key={f.id} freebet={f} onEditar={setEditando} />)}
         </div>
       )}
 
       {addOpen && <NovaFreebetModal parceiros={parceiros} houses={houses} procedimentos={procedimentos} onClose={() => setAddOpen(false)} />}
+      {editando && (
+        // A `key` força o formulário a renascer com os dados da freebet escolhida.
+        <NovaFreebetModal
+          key={editando.id}
+          parceiros={parceiros}
+          houses={houses}
+          procedimentos={procedimentos}
+          freebet={editando}
+          onClose={() => setEditando(null)}
+        />
+      )}
     </div>
   );
 }
 
-function FreebetCard({ freebet }: { freebet: Freebet }) {
+function FreebetCard({ freebet, onEditar }: { freebet: Freebet; onEditar: (f: Freebet) => void }) {
   const validade = validadeInfo(freebet.expiraEm, freebet.status);
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-colors hover:border-border-strong">
@@ -289,6 +304,15 @@ function FreebetCard({ freebet }: { freebet: Freebet }) {
 
       <div className="mt-auto flex items-center gap-2 border-t border-border px-4 py-2.5">
         <span className="min-w-0 flex-1 truncate text-[11px] text-muted">{freebet.notas || "Sem observações"}</span>
+        <button
+          type="button"
+          onClick={() => onEditar(freebet)}
+          title="Editar freebet"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[11px] font-bold text-text-2 transition hover:border-accent/50 hover:text-accent"
+        >
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+          Editar
+        </button>
         <DeleteFreebet id={freebet.id} />
       </div>
     </article>
@@ -405,26 +429,40 @@ function DeleteFreebet({ id }: { id: string }) {
   );
 }
 
-function NovaFreebetModal({ parceiros, houses, procedimentos, onClose }: { parceiros: ParceiroOption[]; houses: HouseOption[]; procedimentos: string[]; onClose: () => void }) {
+/**
+ * Cadastro de freebet. Serve pra CRIAR (sem `freebet`) e pra EDITAR (com
+ * `freebet`) — os campos são os mesmos, então um formulário só evita duas
+ * telas que precisariam ser mantidas em sincronia.
+ */
+function NovaFreebetModal({ parceiros, houses, procedimentos, freebet, onClose }: { parceiros: ParceiroOption[]; houses: HouseOption[]; procedimentos: string[]; freebet?: Freebet; onClose: () => void }) {
+  const editando = !!freebet;
   const formRef = useRef<HTMLFormElement>(null);
-  const [expiraEm, setExpiraEm] = useState("");
+  // A validade vem como ISO do servidor; o DateField trabalha com "aaaa-mm-dd".
+  const [expiraEm, setExpiraEm] = useState(freebet?.expiraEm ? freebet.expiraEm.slice(0, 10) : "");
   const [error, action, pending] = useActionState(
     async (_previous: string | undefined, formData: FormData) => {
-      const result = await addFreebetAction(undefined, formData);
+      const result = editando
+        ? await editarFreebetAction(undefined, formData)
+        : await addFreebetAction(undefined, formData);
       if (!result) onClose();
       return result;
     },
     undefined,
   );
   return (
-    <Modal title="Nova Freebet" subtitle="Preencha os dados da freebet. Campos com * são obrigatórios." onClose={onClose}>
+    <Modal
+      title={editando ? "Editar freebet" : "Nova Freebet"}
+      subtitle={editando ? "Corrija o que estiver errado e salve." : "Preencha os dados da freebet. Campos com * são obrigatórios."}
+      onClose={onClose}
+    >
       <form ref={formRef} action={action} className="space-y-3 p-5">
+        {editando && <input type="hidden" name="id" value={freebet.id} />}
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block space-y-1"><span className="mono-label text-muted">Casa *</span>
-            <HouseCombobox houses={houses} />
+            <HouseCombobox houses={houses} inicial={freebet?.casaNome ?? ""} />
           </label>
           <label className="block space-y-1"><span className="mono-label text-muted">Parceiro</span>
-            <select name="parceiroId" className={inputClass} defaultValue="">
+            <select name="parceiroId" className={inputClass} defaultValue={freebet?.parceiroId ?? ""}>
               <option value="">Sem parceiro</option>
               {parceiros.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
             </select>
@@ -433,24 +471,24 @@ function NovaFreebetModal({ parceiros, houses, procedimentos, onClose }: { parce
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block space-y-1"><span className="mono-label text-muted">Valor *</span>
-            <input name="valor" inputMode="decimal" placeholder="R$ 0,00" className={inputClass} required />
+            <input name="valor" inputMode="decimal" placeholder="R$ 0,00" className={inputClass} required defaultValue={freebet ? String(freebet.valor).replace(".", ",") : ""} />
           </label>
           <label className="block space-y-1"><span className="mono-label text-muted">Tipo</span>
-            <select name="tipo" defaultValue="Missão" className={inputClass}>
+            <select name="tipo" defaultValue={freebet?.tipo ?? "Missão"} className={inputClass}>
               {TIPOS.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </label>
         </div>
 
         <label className="block space-y-1"><span className="mono-label text-muted">Procedimento (como ganhou)</span>
-          <input name="procedimento" list="procedimentos-list" placeholder="Ex.: Aposta ganha, Missão da rodada, Depósito…" autoComplete="off" className={inputClass} />
+          <input name="procedimento" list="procedimentos-list" placeholder="Ex.: Aposta ganha, Missão da rodada, Depósito…" autoComplete="off" className={inputClass} defaultValue={freebet?.procedimento ?? ""} />
           <datalist id="procedimentos-list">
             {procedimentos.map((p) => <option key={p} value={p} />)}
           </datalist>
         </label>
 
         <label className="block space-y-1"><span className="mono-label text-muted">Requisito / condição</span>
-          <input name="requisito" placeholder="Ex.: odd mín. 1.80, rollover 1x, só em Aviator…" className={inputClass} />
+          <input name="requisito" placeholder="Ex.: odd mín. 1.80, rollover 1x, só em Aviator…" className={inputClass} defaultValue={freebet?.requisito ?? ""} />
         </label>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -458,23 +496,24 @@ function NovaFreebetModal({ parceiros, houses, procedimentos, onClose }: { parce
             <DateField name="expiraEm" value={expiraEm} onChange={setExpiraEm} className="w-full" />
           </div>
           <label className="block space-y-1"><span className="mono-label text-muted">Observações</span>
-            <input name="notas" placeholder="Opcional" className={inputClass} />
+            <input name="notas" placeholder="Opcional" className={inputClass} defaultValue={freebet?.notas ?? ""} />
           </label>
         </div>
 
         {error && <p className="rounded-lg bg-negative/10 px-3 py-2 text-xs text-negative" aria-live="polite">{error}</p>}
         <div className="flex justify-end gap-2 pt-1">
           <button type="button" onClick={onClose} className="h-9 rounded-lg px-4 text-xs font-bold text-muted hover:text-text">Cancelar</button>
-          <button type="submit" disabled={pending} className="h-9 rounded-lg bg-accent px-4 text-xs font-black text-accent-ink hover:bg-accent-hover disabled:opacity-50">{pending ? "Salvando…" : "Salvar freebet"}</button>
+          <button type="submit" disabled={pending} className="h-9 rounded-lg bg-accent px-4 text-xs font-black text-accent-ink hover:bg-accent-hover disabled:opacity-50">{pending ? "Salvando…" : editando ? "Salvar alterações" : "Salvar freebet"}</button>
         </div>
       </form>
     </Modal>
   );
 }
 
-function HouseCombobox({ houses }: { houses: HouseOption[] }) {
-  const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState("");
+function HouseCombobox({ houses, inicial = "" }: { houses: HouseOption[]; inicial?: string }) {
+  // `inicial` preenche o campo ao editar uma freebet existente.
+  const [query, setQuery] = useState(inicial);
+  const [selected, setSelected] = useState(inicial);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const wrapRef = useRef<HTMLDivElement>(null);

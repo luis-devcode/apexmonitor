@@ -59,6 +59,61 @@ export async function addFreebetAction(
   return undefined;
 }
 
+/**
+ * Edita uma freebet já cadastrada (corrigir valor, validade, parceiro…).
+ * Não mexe no status nem no vínculo com a operação que a gerou/consumiu —
+ * isso é histórico e tem dono próprio.
+ */
+export async function editarFreebetAction(
+  _prev: string | undefined,
+  formData: FormData,
+): Promise<string | undefined> {
+  const userId = await requireUserId();
+  const id = ((formData.get("id") as string | null) ?? "").trim();
+  const casaNome = ((formData.get("casaNome") as string | null) ?? "").trim();
+  const parceiroId = ((formData.get("parceiroId") as string | null) ?? "").trim() || null;
+  const valor = money(formData.get("valor"));
+  const tipo = ((formData.get("tipo") as string | null) ?? "").trim() || null;
+  const procedimento = ((formData.get("procedimento") as string | null) ?? "").trim() || null;
+  const requisito = ((formData.get("requisito") as string | null) ?? "").trim() || null;
+  const expiraRaw = ((formData.get("expiraEm") as string | null) ?? "").trim();
+  const notas = ((formData.get("notas") as string | null) ?? "").trim() || null;
+
+  if (!id) return "Freebet inválida.";
+  if (!casaNome) return "Selecione a casa de apostas.";
+  if (!Number.isFinite(valor) || valor <= 0) return "Informe o valor da freebet.";
+
+  // Só edita o que é DESTE usuário (falha fechada).
+  const atual = await prisma.freebet.findFirst({ where: { id, userId }, select: { id: true } });
+  if (!atual) return "Freebet não encontrada.";
+
+  let expiraEm: Date | null = null;
+  if (expiraRaw) {
+    const parsed = new Date(expiraRaw);
+    if (Number.isNaN(parsed.getTime())) return "Data de validade inválida.";
+    expiraEm = parsed;
+  }
+
+  if (parceiroId) {
+    const parceiro = await prisma.parceiro.findFirst({ where: { id: parceiroId, userId, ativo: true } });
+    if (!parceiro) return "Parceiro não encontrado ou arquivado.";
+  }
+
+  const cloneGroups = await readCloneGroups();
+  const clone = cloneGroups.find((house) => normHouse(canonicalHouseName(house.name)) === normHouse(canonicalHouseName(casaNome)));
+  const casa =
+    (await prisma.casa.findFirst({ where: { userId, nome: casaNome } })) ??
+    (await prisma.casa.create({ data: { userId, nome: casaNome, logoUrl: clone?.logoUrl || null } }));
+
+  await prisma.freebet.updateMany({
+    where: { id, userId },
+    data: { casaId: casa.id, parceiroId, valor, tipo, procedimento, requisito, expiraEm, notas },
+  });
+
+  revalidatePath("/freebets");
+  return undefined;
+}
+
 /** Registra o valor extraído (converte a freebet em dinheiro) e marca como extraída. */
 export async function setFreebetExtraidoAction(id: string, valorExtraido: number): Promise<void> {
   const userId = await requireUserId();
