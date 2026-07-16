@@ -12,8 +12,8 @@ App e coletor compartilham a pasta de dados do coletor.
 ## Pré-requisitos (você contrata)
 
 - **VPS** com Ubuntu 22.04+ — ex.: Hetzner CX22 (~€4/mês) ou Contabo. 2 vCPU / 4 GB.
-- **Domínio** — ex.: `apexmonitor.com.br` (registro.br, ~R$40/ano).
-- **Repositório privado no GitHub** com este código (é de onde o servidor baixa).
+- **Domínio** — `apexmonitor.com.br` ✅ já registrado (registro.br).
+- **Repositório privado no GitHub** ✅ `luis-devcode/apexmonitor` (é de onde o servidor baixa).
 
 ---
 
@@ -42,7 +42,7 @@ GRANT ALL PRIVILEGES ON DATABASE apexmonitor TO apex;
 
 ```bash
 cd /opt
-git clone https://github.com/SEU_USUARIO/apexmonitor.git
+git clone https://github.com/luis-devcode/apexmonitor.git
 cd apexmonitor
 npm install
 cp .env.example .env
