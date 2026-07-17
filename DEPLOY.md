@@ -246,6 +246,46 @@ Suba o DNS **sem o proxy** (nuvem cinza), deixe o Caddy emitir o certificado, e 
 então ligue o proxy (nuvem laranja) com SSL em **Full (strict)**. É o proxy que traz
 o ganho de latência para o Brasil (handshake em São Paulo + cache dos estáticos).
 
+### Proxy da Cloudflare — ✅ ligado em 16/07/2026
+
+Medido do Brasil, a mesma página pelos dois caminhos:
+
+| | Direto (Alemanha) | Pela Cloudflare |
+|---|---|---|
+| Conexão | 180 ms | **50 ms** |
+| TLS | 360 ms | **84 ms** |
+| **Total** | **720 ms** | **350 ms** |
+
+O ganho está no **handshake**, não em cache: TCP+TLS custam ~3 idas-e-voltas, e
+terminá-las no Brasil elimina ~600 ms antes do primeiro byte.
+
+O que foi feito, além de virar as nuvens:
+
+1. **SSL em Full (strict).** `Flexible` daria loop de redirecionamento (a Cloudflare
+   fala HTTP, o Caddy manda pro HTTPS, repete) — e, se funcionasse, os dados iriam
+   **abertos** entre São Paulo e Nuremberg com o cadeado aparecendo para o cliente.
+2. **`trusted_proxies` no Caddy** com as faixas de `cloudflare.com/ips-v4` e
+   `/ips-v6`, mais `client_ip_headers CF-Connecting-IP`. Sem isto todo visitante
+   chega com o IP da Cloudflare: os logs viram inúteis e qualquer limite por IP
+   puniria todos juntos.
+3. **Firewall: 80/443 só das faixas da Cloudflare.** Sem isto, quem descobrisse
+   `167.233.36.36` contornaria a Cloudflare e o ganho de proteção evaporaria.
+   **A porta 22 fica aberta** — é o único caminho para consertar um erro no próprio
+   firewall.
+
+> ⚠️ **Renovação do certificado.** O Caddy renova pela porta 80, que agora só aceita
+> a Cloudflare. O desafio chega proxiado e deve funcionar — mas o Caddy **não falha**
+> quando não consegue renovar: ele segue com o certificado velho até vencer e
+> derrubar o site. O `OnFailure` não pega isso.
+>
+> Por isso existe `apexmonitor-cert-check.timer` (segundas, 09:00): lê o certificado
+> **no disco** (pela rede se veria o da Cloudflare, não o nosso) e manda e-mail se
+> faltarem menos de 20 dias.
+>
+> **Plano B se a renovação falhar:** trocar o Let's Encrypt por um **Origin
+> Certificate da Cloudflare** — vale 15 anos e não precisa de renovação. Só é
+> possível porque, com o proxy ligado, a Cloudflare é a única que fala com a origem.
+
 ## Passo 8 — Criar seu administrador
 
 Abra `https://apexmonitor.com.br/login`. Como o banco está vazio, aparece o
