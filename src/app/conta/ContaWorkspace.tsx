@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { alterarSenhaAction, atualizarNomeAction } from "./actions";
 
-const inputClass = "h-12 w-full rounded-2xl border border-border bg-bg/55 px-4 text-sm text-text outline-none transition duration-200 placeholder:text-muted/70 hover:border-border-strong focus:border-accent/60 focus:bg-surface-2 focus:ring-4 focus:ring-accent/10 disabled:cursor-not-allowed disabled:text-text-2";
-const panelClass = "rounded-[26px] border border-border bg-surface/70 shadow-[0_20px_70px_rgba(0,0,0,0.16)] backdrop-blur-xl";
+const inputClass = "h-11 w-full rounded-xl border border-border bg-bg/55 px-3.5 text-sm text-text outline-none transition placeholder:text-muted/70 hover:border-border-strong focus:border-accent/60 focus:ring-4 focus:ring-accent/10 disabled:cursor-not-allowed disabled:opacity-60";
 
 type PlanoView = {
   id: string; nome: string; meses: number; economia: number;
@@ -23,14 +22,21 @@ type Props = {
 };
 
 const dataBR = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
+  iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }) : "—";
 
 const planoLabel = (plano: string | null) =>
-  plano ? plano.charAt(0).toUpperCase() + plano.slice(1).toLowerCase() : "Plano não definido";
+  plano ? plano.charAt(0).toUpperCase() + plano.slice(1).toLowerCase() : "Sem plano definido";
+
+const beneficios = (id: string) => {
+  const comuns = ["Monitores de odds em tempo real", "Calculadoras e gestão financeira"];
+  if (id === "mensal") return [...comuns, "Liberdade para renovar mês a mês"];
+  if (id === "trimestral") return [...comuns, "3 meses de acesso sem interrupções"];
+  return [...comuns, "12 meses com o menor custo mensal"];
+};
 
 function Icon({ children, className = "h-5 w-5" }: { children: React.ReactNode; className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {children}
     </svg>
   );
@@ -45,194 +51,171 @@ export default function ContaWorkspace({ nome, email, role, plano, diasRestantes
   const [abrirSenha, setAbrirSenha] = useState(false);
 
   const isAdmin = role === "ADMIN";
-  const inicial = nome.trim().charAt(0).toUpperCase() || "A";
-  const urgente = diasRestantes !== null && diasRestantes <= 5;
   const acessoAtivo = isAdmin || (diasRestantes !== null && diasRestantes > 0);
+  const urgente = !isAdmin && diasRestantes !== null && diasRestantes <= 5;
+  const inicial = nome.trim().charAt(0).toUpperCase() || "A";
 
   return (
-    <main className="mx-auto w-full max-w-[1180px] space-y-5 p-4 sm:p-5 md:p-7 lg:p-8">
-      <section className="relative overflow-hidden rounded-[30px] border border-accent/20 bg-[linear-gradient(125deg,rgba(19,54,112,0.74),rgba(8,18,36,0.92)_48%,rgba(6,12,23,0.96))] p-6 shadow-[0_28px_100px_rgba(5,35,92,0.26)] sm:p-7 lg:p-8">
-        <div className="pointer-events-none absolute -right-20 -top-36 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-40 left-1/3 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
-        <div className="relative flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
-          <div className="flex min-w-0 items-center gap-4 sm:gap-5">
-            <div className="grid h-16 w-16 shrink-0 place-items-center rounded-[22px] border border-white/15 bg-gradient-to-br from-blue-400 to-blue-700 text-2xl font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.34),0_16px_40px_rgba(20,72,183,0.4)] sm:h-[72px] sm:w-[72px]">
-              {inicial}
-            </div>
-            <div className="min-w-0">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-white/10 bg-white/[0.07] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-blue-100/80">Conta ApexMonitor</span>
-                <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.9)]" />
-                  {acessoAtivo ? "Acesso ativo" : "Acesso inativo"}
-                </span>
-              </div>
-              <h2 className="truncate text-2xl font-black tracking-[-0.035em] text-white sm:text-3xl">Olá, {nome}</h2>
-              <p className="mt-1 truncate text-sm text-blue-100/55">{email}</p>
-            </div>
-          </div>
+    <main className="mx-auto w-full max-w-[1180px] space-y-6 p-4 sm:p-5 md:p-7 lg:p-8">
+      <section className="relative isolate overflow-hidden rounded-[30px] border border-white/[0.07] bg-[#080b10] px-4 pb-5 pt-12 shadow-[0_32px_100px_rgba(0,0,0,0.34)] sm:px-7 sm:pb-7 sm:pt-14 lg:px-10 lg:pb-10">
+        <div className="pointer-events-none absolute -left-24 -top-28 -z-10 h-80 w-80 rounded-full bg-blue-500/30 blur-[90px]" />
+        <div className="pointer-events-none absolute -bottom-40 -right-20 -z-10 h-96 w-96 rounded-full bg-blue-600/25 blur-[100px]" />
+        <div className="pointer-events-none absolute left-0 top-0 -z-10 h-32 w-32 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.22),transparent_66%)]" />
+        <div className="pointer-events-none absolute -left-3 top-1/3 h-8 w-8 rotate-45 rounded-[7px] bg-blue-400/15 shadow-[0_0_30px_rgba(96,165,250,0.28)]" />
+        <div className="pointer-events-none absolute -right-3 top-24 h-8 w-8 rotate-45 rounded-[7px] bg-blue-400/10" />
 
-          <div className="grid grid-cols-2 gap-3 sm:flex sm:items-stretch">
-            <div className="min-w-0 rounded-2xl border border-white/10 bg-black/15 px-4 py-3 backdrop-blur-md sm:min-w-36">
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-blue-100/45">Seu plano</p>
-              <p className="mt-1 text-sm font-extrabold text-white">{isAdmin ? "Administrativo" : planoLabel(plano)}</p>
-            </div>
-            <div className="min-w-0 rounded-2xl border border-white/10 bg-black/15 px-4 py-3 backdrop-blur-md sm:min-w-44">
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-blue-100/45">Período de acesso</p>
-              {isAdmin ? (
-                <p className="mt-1 text-sm font-extrabold text-white">Acesso permanente</p>
-              ) : diasRestantes !== null ? (
-                <p className={`mt-1 text-sm font-extrabold ${urgente ? "text-amber-300" : "text-white"}`}>
-                  {diasRestantes} {diasRestantes === 1 ? "dia restante" : "dias restantes"}
-                </p>
-              ) : (
-                <p className="mt-1 text-sm font-extrabold text-white/70">Não disponível</p>
-              )}
-              {!isAdmin && vencimento && <p className="mt-0.5 text-[10px] text-blue-100/45">Até {dataBR(vencimento)}</p>}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {urgente && !isAdmin && (
-        <div className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/[0.07] px-4 py-3 text-xs font-semibold text-amber-300">
-          <Icon className="mt-0.5 h-4 w-4 shrink-0"><path d="M12 3 2.8 19h18.4L12 3Z" /><path d="M12 9v4M12 17h.01" /></Icon>
-          Sua assinatura está perto de vencer. Ao renovar, o novo período é somado aos dias que você já possui.
-        </div>
-      )}
-
-      <div className="grid gap-5 lg:grid-cols-[1.35fr_0.85fr]">
-        <section className={`${panelClass} p-5 sm:p-6`}>
-          <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-accent/15 bg-accent/10 text-accent">
-              <Icon><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21a8 8 0 0 1 16 0" /></Icon>
-            </span>
-            <div>
-              <h2 className="text-base font-extrabold tracking-[-0.02em] text-text">Informações pessoais</h2>
-              <p className="mt-0.5 text-xs leading-relaxed text-muted">Mantenha seus dados de identificação atualizados.</p>
-            </div>
-          </div>
-
-          <form action={salvarNome} className="mt-6 space-y-4">
-            <label className="block space-y-2">
-              <span className="mono-label text-muted">Nome de exibição</span>
-              <input name="nome" defaultValue={nome} required className={inputClass} />
-            </label>
-            <label className="block space-y-2">
-              <span className="mono-label text-muted">E-mail da conta</span>
-              <div className="relative">
-                <input value={email} disabled className={`${inputClass} pr-28 opacity-70`} />
-                <span className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5 rounded-xl border border-border bg-surface-3/80 px-2.5 py-1.5 text-[10px] font-bold text-muted" title="O e-mail é a chave da sua assinatura e não pode ser alterado aqui.">
-                  <Icon className="h-3 w-3"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></Icon>
-                  Protegido
-                </span>
-              </div>
-            </label>
-            {erroNome && <p className="text-xs font-semibold text-negative">{erroNome}</p>}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-              <p className="text-[11px] text-muted">O e-mail é vinculado à sua assinatura.</p>
-              <button disabled={salvandoNome} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-accent to-accent-deep px-5 text-xs font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.24),0_10px_24px_rgba(23,73,183,0.25)] transition hover:-translate-y-0.5 hover:brightness-110 disabled:translate-y-0 disabled:opacity-60">
-                <Icon className="h-4 w-4"><path d="M4 4h13l3 3v13H4Z" /><path d="M8 4v6h8V4M8 20v-6h8v6" /></Icon>
-                {salvandoNome ? "Salvando…" : "Salvar alterações"}
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <section className={`${panelClass} p-5 sm:p-6`}>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.08] text-emerald-400">
-                <Icon><path d="M12 3 5 6v5c0 4.7 2.8 8.1 7 10 4.2-1.9 7-5.3 7-10V6l-7-3Z" /><path d="m9 12 2 2 4-5" /></Icon>
-              </span>
-              <div>
-                <h2 className="text-base font-extrabold tracking-[-0.02em] text-text">Acesso e segurança</h2>
-                <p className="mt-0.5 text-xs leading-relaxed text-muted">Sua conta está protegida.</p>
-              </div>
-            </div>
-            <span className="rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-emerald-400">Seguro</span>
-          </div>
-
-          {!abrirSenha ? (
-            <div className="mt-6">
-              <div className="rounded-2xl border border-border bg-bg/35 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-bold text-text">Senha da conta</p>
-                    <p className="mt-1 text-[11px] leading-relaxed text-muted">Use uma senha exclusiva com pelo menos 8 caracteres.</p>
-                  </div>
-                  <span className="font-mono text-base tracking-[0.2em] text-text-2">••••••••</span>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center gap-2 text-[11px] text-muted">
-                <Icon className="h-3.5 w-3.5 text-emerald-400"><path d="m5 12 4 4L19 6" /></Icon>
-                Sessão protegida e credenciais criptografadas.
-              </div>
-              <button onClick={() => setAbrirSenha(true)} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-border-strong bg-surface-2/70 text-xs font-extrabold text-text transition hover:border-accent/35 hover:bg-accent/[0.06] hover:text-accent">
-                <Icon className="h-4 w-4"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" /></Icon>
-                Alterar minha senha
-              </button>
-            </div>
-          ) : (
-            <form action={salvarSenha} className="mt-6 space-y-3">
-              <input name="senhaAtual" type="password" placeholder="Senha atual" required className={inputClass} />
-              <input name="novaSenha" type="password" placeholder="Nova senha (mín. 8 caracteres)" required minLength={8} className={inputClass} />
-              <input name="confirmaSenha" type="password" placeholder="Confirme a nova senha" required className={inputClass} />
-              {msgSenha && msgSenha !== "ok" && <p className="text-xs font-semibold text-negative">{msgSenha}</p>}
-              {msgSenha === "ok" && <p className="text-xs font-semibold text-emerald-400">Senha alterada com sucesso.</p>}
-              <div className="flex gap-2 pt-1">
-                <button disabled={salvandoSenha} className="h-11 flex-1 rounded-2xl bg-accent px-4 text-xs font-black text-white transition hover:bg-accent-hover disabled:opacity-60">
-                  {salvandoSenha ? "Salvando…" : "Atualizar senha"}
-                </button>
-                <button type="button" onClick={() => setAbrirSenha(false)} className="h-11 rounded-2xl border border-border px-4 text-xs font-bold text-text-2 transition hover:bg-surface-2">Cancelar</button>
-              </div>
-            </form>
-          )}
-        </section>
-      </div>
-
-      <section className={`${panelClass} overflow-hidden`}>
-        <div className="flex flex-col justify-between gap-3 border-b border-border px-5 py-5 sm:flex-row sm:items-end sm:px-6">
-          <div>
-            <span className="mono-label text-accent">Planos e renovação</span>
-            <h2 className="mt-1.5 text-lg font-black tracking-[-0.025em] text-text">Escolha o ritmo da sua operação</h2>
-            <p className="mt-1 text-xs text-muted">Ao renovar, seus dias restantes são preservados e somados ao novo período.</p>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] font-semibold text-muted">
-            <Icon className="h-3.5 w-3.5 text-accent"><rect x="3" y="5" width="18" height="14" rx="3" /><path d="M3 10h18" /></Icon>
-            Pix ou cartão de crédito
-          </div>
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-blue-400/15 bg-blue-400/[0.07] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.24em] text-blue-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.9)]" />
+            Assinatura ApexMonitor
+          </span>
+          <h2 className="mt-5 text-3xl font-black tracking-[-0.045em] text-white sm:text-4xl">O plano perfeito para a sua operação</h2>
+          <p className="mx-auto mt-3 max-w-xl text-xs leading-6 text-slate-400 sm:text-sm">Escolha o período que faz sentido para você. Todos os planos liberam a experiência completa, sem limitar ferramentas.</p>
         </div>
 
-        <div className="grid gap-3 p-4 sm:p-5 md:grid-cols-3 md:p-6">
+        <div className="relative mx-auto mt-9 grid max-w-[970px] items-start gap-3 md:grid-cols-3 md:gap-4">
           {planos.map((p) => {
-            const destaque = p.id === "anual";
+            const destaque = p.id === "trimestral";
+            const melhorEconomia = p.id === "anual";
             return (
-              <article key={p.id} className={`group relative flex min-h-[250px] flex-col overflow-hidden rounded-[22px] border p-5 transition duration-300 hover:-translate-y-1 ${destaque ? "border-accent/45 bg-accent/[0.07] shadow-[0_18px_50px_rgba(20,73,183,0.16)]" : "border-border bg-bg/35 hover:border-border-strong hover:bg-surface-2/60"}`}>
-                {destaque && <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-accent/15 blur-2xl" />}
-                <div className="relative flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-black text-text">{p.nome}</p>
-                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">{p.meses} {p.meses === 1 ? "mês de acesso" : "meses de acesso"}</p>
-                  </div>
-                  {p.economia > 0 && (
-                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${destaque ? "bg-accent text-white" : "bg-emerald-400/10 text-emerald-400"}`}>Economize {p.economia}%</span>
-                  )}
+              <article
+                key={p.id}
+                className={`relative flex min-h-[390px] flex-col rounded-[24px] border p-5 transition duration-300 hover:-translate-y-1 sm:p-6 ${destaque ? "border-blue-400/45 bg-[linear-gradient(160deg,rgba(22,32,48,0.98),rgba(10,14,20,0.98))] shadow-[0_0_0_1px_rgba(59,130,246,0.08),0_24px_70px_rgba(11,61,147,0.22)] md:min-h-[430px]" : "border-white/[0.055] bg-[#101318]/95 md:mt-5"}`}
+              >
+                {destaque && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-500 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-[0_8px_24px_rgba(37,99,235,0.4)]">Mais escolhido</span>
+                )}
+
+                <div className="flex min-h-8 items-start justify-between gap-2">
+                  <p className={`text-xs font-black ${destaque ? "text-blue-400" : "text-slate-200"}`}>{p.nome}</p>
+                  {melhorEconomia && <span className="rounded-full bg-emerald-400/10 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-emerald-400">Maior economia</span>}
                 </div>
 
-                <div className="relative mt-6">
-                  <p className="text-[11px] text-muted">Referência de mercado <span className="line-through decoration-muted/60">{p.valorCheioFmt}</span></p>
-                  <p className="mt-1 text-[28px] font-black tracking-[-0.04em] text-text">{p.valorFmt}</p>
-                  <p className="mt-0.5 text-xs font-semibold text-text-2">equivale a {p.porMesFmt}<span className="font-normal text-muted">/mês</span></p>
+                <div className="mt-5 flex items-end gap-1.5">
+                  <strong className="text-[34px] font-black tracking-[-0.05em] text-white sm:text-[38px]">{p.porMesFmt}</strong>
+                  <span className="mb-1.5 text-[11px] font-semibold text-slate-500">/mês</span>
                 </div>
+                <p className="mt-1 text-[10px] leading-5 text-slate-500">Cobrança de {p.valorFmt} por {p.meses === 1 ? "mês" : `${p.meses} meses`}.</p>
 
-                <Link href={`/assinar?plano=${p.id}`} className={`relative mt-auto flex h-11 w-full items-center justify-center gap-2 rounded-2xl text-xs font-black transition ${destaque ? "bg-gradient-to-b from-accent to-accent-deep text-white hover:brightness-110" : "border border-border bg-surface-2/70 text-text hover:border-accent/35 hover:text-accent"}`}>
-                  {acessoAtivo ? "Renovar neste plano" : "Assinar"}
-                  <Icon className="h-3.5 w-3.5"><path d="m9 18 6-6-6-6" /></Icon>
-                </Link>
+                <div className="my-5 h-px bg-white/[0.06]" />
+
+                <p className="text-[10px] font-bold text-slate-300">Tudo que você precisa:</p>
+                <ul className="mt-3 space-y-3">
+                  {beneficios(p.id).map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-[10px] leading-4 text-slate-400">
+                      <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-white/[0.06] text-blue-400">
+                        <Icon className="h-2.5 w-2.5"><path d="m5 12 4 4L19 6" /></Icon>
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-auto pt-6">
+                  {p.economia > 0 && <p className="mb-3 text-center text-[9px] font-bold text-emerald-400">Você economiza {p.economia}% frente ao mercado</p>}
+                  <Link
+                    href={`/assinar?plano=${p.id}`}
+                    className={`flex h-11 w-full items-center justify-center rounded-xl text-[10px] font-black transition ${destaque ? "bg-blue-500 text-white shadow-[0_12px_30px_rgba(37,99,235,0.3)] hover:bg-blue-400" : "border border-white/[0.08] bg-white/[0.04] text-slate-200 hover:border-blue-400/30 hover:bg-blue-500/10 hover:text-blue-300"}`}
+                  >
+                    {acessoAtivo ? "Renovar neste plano" : "Escolher este plano"}
+                  </Link>
+                </div>
               </article>
             );
           })}
+        </div>
+
+        <div className="mx-auto mt-5 flex max-w-[970px] flex-col items-center justify-between gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.035] px-4 py-3 sm:flex-row sm:px-5">
+          <p className="flex items-center gap-2 text-[10px] text-slate-400">
+            <Icon className="h-3.5 w-3.5 text-blue-400"><path d="M12 3 5 6v5c0 4.7 2.8 8.1 7 10 4.2-1.9 7-5.3 7-10V6l-7-3Z" /><path d="m9 12 2 2 4-5" /></Icon>
+            Checkout seguro por Pix ou cartão de crédito
+          </p>
+          <p className="text-[10px] font-semibold text-slate-500">Renovar agora preserva todos os seus dias restantes.</p>
+        </div>
+      </section>
+
+      {urgente && (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/[0.07] px-4 py-3 text-xs font-semibold text-amber-400">
+          <Icon className="mt-0.5 h-4 w-4 shrink-0"><path d="M12 3 2.8 19h18.4L12 3Z" /><path d="M12 9v4M12 17h.01" /></Icon>
+          Sua assinatura está perto de vencer. Ao renovar, o novo período será somado aos dias atuais.
+        </div>
+      )}
+
+      <section className="overflow-hidden rounded-[26px] border border-border bg-surface/65 shadow-[0_20px_70px_rgba(0,0,0,0.14)]">
+        <div className="flex flex-col justify-between gap-4 border-b border-border px-5 py-5 sm:flex-row sm:items-center sm:px-6">
+          <div className="flex min-w-0 items-center gap-3.5">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-blue-400 to-blue-700 text-sm font-black text-white shadow-[0_8px_22px_rgba(37,99,235,0.28)]">{inicial}</div>
+            <div className="min-w-0">
+              <h3 className="truncate text-sm font-extrabold text-text">{nome}</h3>
+              <p className="truncate text-[11px] text-muted">{email}</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-2.5 py-1 text-[9px] font-bold text-emerald-400"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />Acesso ativo</span>
+            <span className="rounded-full border border-border bg-bg/40 px-2.5 py-1 text-[9px] font-bold text-text-2">{isAdmin ? "Administrativo · permanente" : `${planoLabel(plano)} · ${diasRestantes ?? 0} dias`}</span>
+            {!isAdmin && vencimento && <span className="text-[9px] text-muted">vence em {dataBR(vencimento)}</span>}
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-2">
+          <div className="border-b border-border p-5 sm:p-6 lg:border-b-0 lg:border-r">
+            <div className="flex items-center gap-2.5">
+              <Icon className="h-4 w-4 text-accent"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21a8 8 0 0 1 16 0" /></Icon>
+              <div>
+                <h3 className="text-sm font-extrabold text-text">Dados da conta</h3>
+                <p className="text-[10px] text-muted">Informações usadas no seu acesso.</p>
+              </div>
+            </div>
+            <form action={salvarNome} className="mt-5 space-y-3">
+              <label className="block space-y-1.5">
+                <span className="mono-label text-muted">Nome de exibição</span>
+                <input name="nome" defaultValue={nome} required className={inputClass} />
+              </label>
+              <label className="block space-y-1.5">
+                <span className="mono-label text-muted">E-mail protegido</span>
+                <input value={email} disabled className={inputClass} />
+              </label>
+              {erroNome && <p className="text-xs font-semibold text-negative">{erroNome}</p>}
+              <button disabled={salvandoNome} className="h-10 rounded-xl bg-accent px-4 text-[10px] font-black text-white transition hover:bg-accent-hover disabled:opacity-60">
+                {salvandoNome ? "Salvando…" : "Salvar alterações"}
+              </button>
+            </form>
+          </div>
+
+          <div className="p-5 sm:p-6">
+            <div className="flex items-center gap-2.5">
+              <Icon className="h-4 w-4 text-accent"><path d="M12 3 5 6v5c0 4.7 2.8 8.1 7 10 4.2-1.9 7-5.3 7-10V6l-7-3Z" /></Icon>
+              <div>
+                <h3 className="text-sm font-extrabold text-text">Senha e segurança</h3>
+                <p className="text-[10px] text-muted">Credenciais protegidas e sessão individual.</p>
+              </div>
+            </div>
+
+            {!abrirSenha ? (
+              <div className="mt-5">
+                <div className="flex items-center justify-between rounded-2xl border border-border bg-bg/35 px-4 py-4">
+                  <div>
+                    <p className="text-xs font-bold text-text">Senha da conta</p>
+                    <p className="mt-1 text-[10px] text-muted">Última proteção disponível</p>
+                  </div>
+                  <span className="font-mono tracking-[0.22em] text-text-2">••••••••</span>
+                </div>
+                <button onClick={() => setAbrirSenha(true)} className="mt-3 h-10 w-full rounded-xl border border-border-strong text-[10px] font-black text-text-2 transition hover:border-accent/35 hover:bg-accent/[0.05] hover:text-accent">Alterar minha senha</button>
+              </div>
+            ) : (
+              <form action={salvarSenha} className="mt-5 space-y-3">
+                <input name="senhaAtual" type="password" placeholder="Senha atual" required className={inputClass} />
+                <input name="novaSenha" type="password" placeholder="Nova senha (mín. 8 caracteres)" required minLength={8} className={inputClass} />
+                <input name="confirmaSenha" type="password" placeholder="Confirme a nova senha" required className={inputClass} />
+                {msgSenha && msgSenha !== "ok" && <p className="text-xs font-semibold text-negative">{msgSenha}</p>}
+                {msgSenha === "ok" && <p className="text-xs font-semibold text-emerald-400">Senha alterada com sucesso.</p>}
+                <div className="flex gap-2">
+                  <button disabled={salvandoSenha} className="h-10 flex-1 rounded-xl bg-accent px-4 text-[10px] font-black text-white disabled:opacity-60">{salvandoSenha ? "Salvando…" : "Atualizar senha"}</button>
+                  <button type="button" onClick={() => setAbrirSenha(false)} className="h-10 rounded-xl border border-border px-4 text-[10px] font-bold text-text-2">Cancelar</button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       </section>
     </main>
