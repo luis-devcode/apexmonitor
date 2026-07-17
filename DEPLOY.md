@@ -313,9 +313,28 @@ Restaure sempre num banco descartável primeiro; só depois aponte o app para el
 >   que incluir o **IPv6** (`2a01:4f8:1c18:b7f3::/64`), não só o IPv4 — só com o
 >   IPv4 o backup falha em silêncio, todo dia.
 
-> **Falta alerta de falha.** Hoje, se o backup parar, ninguém é avisado — só
-> aparece em `systemctl status apexmonitor-backup`. Antes do primeiro cliente
-> pagante, ligar isso a um canal (e-mail/Telegram).
+- **Alerta de falha por e-mail** — ✅ feito, para `luisfilipemarchini21@hotmail.com`.
+
+  O systemd chama `apexmonitor-alerta@%N.service` via `OnFailure=` (drop-in em
+  `/etc/systemd/system/<unit>.service.d/alerta.conf`) em **três** serviços:
+  `apexmonitor-backup`, `apexmonitor` (o site) e `apexmonitor-coletor`. O script
+  junta as últimas 25 linhas do journal e manda pela **API HTTP do Resend**
+  (grátis: 3.000/mês). Chave em `/root/.resend_key` (600).
+
+  > **Por que API HTTP e não SMTP:** a Hetzner bloqueia as portas 25 e 465 por ~1
+  > mês em conta nova. A 443 não — então o `curl` passa e o problema some.
+  >
+  > **Por que `onboarding@resend.dev` e não `@apexmonitor.com.br`:** enviar pelo
+  > domínio exigiria verificá-lo no Resend e **trocar o `v=spf1 -all`**, que hoje
+  > impede que falsifiquem e-mail seu. Não vale mexer nisso por um alerta interno;
+  > fazer junto quando o produto precisar de e-mail (recuperar senha, assinatura).
+  >
+  > **Use `%N`, não `%n`**, no `OnFailure`: `%n` já inclui o sufixo e vira
+  > `nome.service.service` — o alerta nunca dispara e nada indica o porquê.
+
+  **O que isto NÃO cobre:** serviço lento (mas vivo), coletor autenticando e
+  trazendo dado velho, e a queda do servidor inteiro (não sobra quem mande o
+  e-mail). Isso pede monitoramento externo — vale quando houver cliente pagante.
 - **Nunca** exponha o repositório publicamente (a pasta `integrations/monitorodds`
   revela a fonte dos dados).
 - **Antes de virar público:** renomear a pasta `integrations/monitorodds` para um
