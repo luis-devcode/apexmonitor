@@ -279,13 +279,43 @@ generate + db push → **build** → restart, e termina conferindo se `/login` r
 
 ## Pós-lançamento
 
-- **Backup diário do Postgres** — ✅ feito: `apexmonitor-backup.timer` roda 03:30,
-  guarda 14 dias em `/var/backups/apexmonitor`, e não apaga os antigos se o dump
-  do dia sair vazio.
-  > ⚠️ **Mora no mesmo servidor.** Protege de "apaguei sem querer", **não** de
-  > "o servidor morreu" — que é justamente o caso em que se precisa de backup.
-  > **Antes do primeiro cliente pagante**, mandar a cópia para fora da máquina
-  > (backup pago da Hetzner, um bucket, ou `scp` para outro lugar).
+- **Backup do Postgres** — ✅ feito, em duas camadas. `apexmonitor-backup.timer`
+  roda 03:30 UTC (00:30 BRT) e chama `/usr/local/bin/apexmonitor-backup`:
+
+  | Camada | Onde | Retenção | Serve para |
+  |---|---|---|---|
+  | Local | `/var/backups/apexmonitor` | 14 dias | restaurar rápido de erro humano |
+  | Remota | Cloudflare R2 (`apexmonitor-backup`) | 90 dias | sobreviver à perda do servidor |
+
+  O R2 é grátis até 10 GB e não cobra egresso; o dump comprimido tem poucos KB.
+  A cópia fica em **outra empresa e outro continente** (EUA) — é o que o backup
+  local não dava.
+
+  O script aborta se o dump sair vazio (backup quebrado não pode apagar os bons) e
+  **confere se o arquivo apareceu no R2** depois do upload — "sem erro" não é prova
+  de que chegou.
+
+### Restaurar (procedimento testado em 16/07/2026)
+
+```bash
+ARQ=$(rclone lsf r2:apexmonitor-backup/ | tail -1)     # ou escolha a data
+rclone copy "r2:apexmonitor-backup/$ARQ" /tmp/restore/
+sudo -u postgres psql -c "CREATE DATABASE restore_teste OWNER apex;"
+zcat "/tmp/restore/$ARQ" | sudo -u postgres psql -d restore_teste
+sudo -u postgres psql -d restore_teste -c 'SELECT COUNT(*) FROM "User";'
+```
+Restaure sempre num banco descartável primeiro; só depois aponte o app para ele.
+
+> **Duas armadilhas achadas na configuração:**
+> - **O rclone do apt é de 2022** (v1.60) e o R2 responde `501 Not Implemented` no
+>   upload. Instale o atual: `curl https://rclone.org/install.sh | bash`.
+> - **O servidor fala com a Cloudflare por IPv6.** O filtro de IP do token R2 tem
+>   que incluir o **IPv6** (`2a01:4f8:1c18:b7f3::/64`), não só o IPv4 — só com o
+>   IPv4 o backup falha em silêncio, todo dia.
+
+> **Falta alerta de falha.** Hoje, se o backup parar, ninguém é avisado — só
+> aparece em `systemctl status apexmonitor-backup`. Antes do primeiro cliente
+> pagante, ligar isso a um canal (e-mail/Telegram).
 - **Nunca** exponha o repositório publicamente (a pasta `integrations/monitorodds`
   revela a fonte dos dados).
 - **Antes de virar público:** renomear a pasta `integrations/monitorodds` para um
