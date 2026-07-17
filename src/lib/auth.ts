@@ -8,6 +8,16 @@ import { prisma } from "@/lib/prisma";
 const COOKIE = "sessao";
 const SESSION_DAYS = 30;
 
+/**
+ * Quantas sessões um usuário pode ter ao mesmo tempo.
+ *
+ * Em 1, entrar num aparelho desconecta todos os outros. É o que impede uma
+ * assinatura de servir um grupo — sem isso, um cliente paga e cinco usam.
+ * O custo é atrito real para o cliente legítimo: abrir no celular derruba o
+ * computador. Subir para 2 (celular + computador) é só trocar este número.
+ */
+const MAX_SESSOES = 1;
+
 /* ---------------------------------------------------------------------------
  * Senha: hash de MÃO ÚNICA (scrypt + salt). Nunca guardamos a senha original.
  * Formato guardado: "salt:hash" (ambos em hex).
@@ -36,6 +46,23 @@ const hashToken = (token: string) => createHash("sha256").update(token).digest("
 export async function createSession(userId: string): Promise<void> {
   const token = randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 86_400_000);
+
+  // Sessão vencida não conta pro limite e ninguém a apaga sozinha: quem nunca
+  // mais voltar deixaria linhas acumuladas pra sempre. Aproveita o login.
+  await prisma.session.deleteMany({ where: { userId, expiresAt: { lt: new Date() } } });
+
+  // Derruba as mais antigas até caber o login novo. Guarda as MAX_SESSOES - 1
+  // mais recentes; o `skip` sobre a ordem decrescente deixa justamente o excesso.
+  // O login novo SEMPRE entra — quem sai é quem estava aqui há mais tempo.
+  const excedentes = await prisma.session.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+    skip: MAX_SESSOES - 1,
+  });
+  if (excedentes.length > 0) {
+    await prisma.session.deleteMany({ where: { id: { in: excedentes.map((s) => s.id) } } });
+  }
 
   await prisma.session.create({ data: { tokenHash: hashToken(token), userId, expiresAt } });
 
