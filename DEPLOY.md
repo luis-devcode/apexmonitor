@@ -136,6 +136,35 @@ npx prisma db push
 > `prisma.config.ts` (não do bloco `datasource`, que não tem `url` no modo
 > driver adapter).
 
+### ⚠️ Segredos que começam com `$` (ex.: a chave do Asaas) NÃO vão no `.env`
+
+A chave de API do Asaas começa com `$` (`$aact_...`). Dois loaders leem o `.env` e
+**ambos estragam o `$`**:
+
+1. **O Next.js** (`@next/env`) roda `dotenv-expand`, que trata `$aact_...` como
+   referência de variável e o resolve para **string vazia**. O app sobe com a chave
+   em branco e o webhook falha com "ASAAS_API_KEY ausente" — sem erro no build.
+2. **O `source ./.env` do shell** (deploy) expande o `$` e quebra com `unbound
+   variable` sob `set -u`.
+
+**Solução:** segredos com `$` moram em `/opt/apexmonitor/.env.secrets`, carregado
+**só pelo systemd** (o Next não lê arquivos com esse nome). O deploy carrega apenas
+o `DATABASE_URL` do `.env`, de forma literal (não via `source`):
+
+```bash
+# no .env.secrets (formato systemd, sem aspas, valor literal):
+ASAAS_API_KEY=$aact_hmlg_...
+
+# no systemd unit, DOIS EnvironmentFile:
+EnvironmentFile=/opt/apexmonitor/.env
+EnvironmentFile=/opt/apexmonitor/.env.secrets
+
+# no deploy, em vez de `source .env`:
+export DATABASE_URL="$(grep '^DATABASE_URL=' .env | cut -d= -f2- | sed 's/^"//;s/"$//')"
+```
+
+`.env.secrets` casa com o padrão `.env*` do `.gitignore` — nunca é commitado.
+
 ## Passo 5 — Build
 
 ```bash
@@ -409,6 +438,25 @@ Restaure sempre num banco descartável primeiro; só depois aponte o app para el
 - **Antes de virar público:** renomear a pasta `integrations/monitorodds` para um
   nome neutro (ficou de fora do dev pra não quebrar o coletor rodando; é um passo
   de última hora, com o serviço parado).
+
+## Webhook do Asaas (assinaturas)
+
+Endpoint: `POST /api/asaas/webhook`. Configurar no painel do Asaas (Integrações →
+Webhooks) apontando para `https://apexmonitor.com.br/api/asaas/webhook`, com o
+**token** de `ASAAS_WEBHOOK_TOKEN` no campo authToken. O Asaas envia esse token no
+header `asaas-access-token`; o endpoint valida (timingSafeEqual, falha fechada)
+antes de qualquer processamento — sem isso, um POST forjado daria acesso grátis.
+
+Fluxo (Opção 2 — pagamento cria a conta): evento `PAYMENT_CONFIRMED`/`RECEIVED` →
+busca o e-mail do cliente na API → cria o `User` se não existe (senha aleatória por
+e-mail via Resend) ou renova → registra `Pagamento` (idempotente pelo `asaasId`
+único) com afiliado e comissão **congelados**. O checkout grava
+`externalReference="meses=N;cupom=XXX"` na cobrança — é como o webhook sabe a
+duração e a origem.
+
+**Sandbox primeiro:** `ASAAS_ENV=sandbox` usa `api-sandbox.asaas.com` (dinheiro
+falso). Trocar para `producao` só depois de confirmar o segmento com o Asaas (aposta
+é segmento sensível — risco de congelar a conta com dinheiro dentro).
 
 ## Sobre a fonte de dados
 
