@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import Landing from "@/components/Landing";
 import ResultadosChart from "@/components/ResultadosChart";
-import { getCurrentUser, requireUserId } from "@/lib/auth";
+import { assinaturaAtiva, getCurrentUser } from "@/lib/auth";
 import { porMes } from "@/lib/custos";
 import { procedimentoLabel } from "@/lib/procedimentos";
 import { prisma } from "@/lib/prisma";
@@ -50,8 +52,14 @@ function Icon({ name, className = "h-5 w-5" }: { name: keyof typeof ICONS; class
 }
 
 export default async function DashboardPage() {
-  const userId = await requireUserId();
-  const user = await getCurrentUser();
+  // Visitante não-logado vê a página de vendas; logado sem assinatura vai renovar;
+  // logado e ativo cai no dashboard (comportamento original de requireUserId).
+  const visitante = await getCurrentUser();
+  if (!visitante) return <Landing />;
+  if (!assinaturaAtiva(visitante)) redirect("/assinatura");
+
+  const userId = visitante.id;
+  const user = visitante;
   const agora = new Date();
   const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
   const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
