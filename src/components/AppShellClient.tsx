@@ -77,7 +77,10 @@ const NAV: NavSection[] = [
 // cliente comum — a proteção real está na página, isto é só a navegação.
 const NAV_ADMIN: NavSection = {
   label: "Administração",
-  items: [{ href: "/admin", label: "Clientes", icon: I.users }],
+  items: [
+    { href: "/admin", label: "Clientes", icon: I.users },
+    { href: "/admin/afiliados", label: "Afiliados", icon: I.split },
+  ],
 };
 
 const currentNavItem = (pathname: string) => [...NAV, NAV_ADMIN]
