@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { asaasFetch } from "@/lib/asaas";
 import { hashPassword } from "@/lib/auth";
 import { enviarEmail } from "@/lib/email";
+import { planoPorId } from "@/lib/planos";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -11,13 +12,17 @@ import { prisma } from "@/lib/prisma";
  * webhook não teria como saber sozinho: quantos meses aquele pagamento concede e
  * de qual cupom a venda veio. Formato compacto: "meses=1;cupom=JOAO10".
  */
-export function montarReferencia(meses: number, cupom?: string | null): string {
+export function montarReferencia(meses: number, cupom?: string | null, email?: string | null): string {
   const partes = [`meses=${meses}`];
   if (cupom) partes.push(`cupom=${cupom}`);
+  // Renovação de usuário logado: gravamos o e-mail da conta (definido no servidor,
+  // não pelo cliente) para o pagamento amarrar SEMPRE à conta certa — mesmo que a
+  // pessoa digite outro e-mail na página do Asaas.
+  if (email) partes.push(`email=${email}`);
   return partes.join(";");
 }
 
-function lerReferencia(ref: string): { meses: number; cupom: string | null } {
+function lerReferencia(ref: string): { meses: number; cupom: string | null; email: string | null } {
   const map = new Map(ref.split(";").map((p) => {
     const [k, v] = p.split("=");
     return [k.trim(), (v ?? "").trim()];
@@ -26,6 +31,7 @@ function lerReferencia(ref: string): { meses: number; cupom: string | null } {
   return {
     meses: Number.isInteger(meses) && meses > 0 && meses <= 24 ? meses : 1,
     cupom: map.get("cupom") || null,
+    email: map.get("email") || null,
   };
 }
 
@@ -59,9 +65,11 @@ export async function processarPagamentoAsaas(payment: Payment): Promise<{ statu
   const valor = Number(payment.value) || 0;
   const billing = String(payment.billingType ?? "");
   const metodo = billing.includes("PIX") ? "PIX" : billing.includes("CREDIT") ? "CARTAO" : "OUTRO";
-  const { meses, cupom } = lerReferencia(String(payment.externalReference ?? ""));
+  const { meses, cupom, email: emailRef } = lerReferencia(String(payment.externalReference ?? ""));
 
-  // 2. E-MAIL DO CLIENTE — o payload traz o id do cliente; buscamos o e-mail.
+  // 2. E-MAIL DO CLIENTE — o payload traz o id do cliente; buscamos nome/e-mail.
+  // Se a referência trouxe um e-mail (renovação de logado), ele MANDA — amarra à
+  // conta certa mesmo que a pessoa tenha digitado outro e-mail no Asaas.
   const custId = String(payment.customer ?? "");
   if (!custId) return { status: "sem-cliente" };
   const cust = await asaasFetch(`/customers/${custId}`);
@@ -70,7 +78,7 @@ export async function processarPagamentoAsaas(payment: Payment): Promise<{ statu
     return { status: "cliente-nao-encontrado" };
   }
   const dados = cust.body as { email?: string; name?: string };
-  const email = String(dados.email ?? "").trim().toLowerCase();
+  const email = (emailRef ?? String(dados.email ?? "")).trim().toLowerCase();
   const nome = String(dados.name ?? "").trim() || email;
   if (!email) return { status: "sem-email" };
 
@@ -142,4 +150,81 @@ export async function processarPagamentoAsaas(payment: Payment): Promise<{ statu
   }
 
   return { status: senhaGerada ? "conta-criada" : "renovado" };
+}
+
+// Ciclo do Asaas por plano (cartão recorrente). O Pix é avulso, não usa isto.
+const CICLO_ASAAS: Record<string, string> = {
+  mensal: "MONTHLY",
+  trimestral: "QUARTERLY",
+  anual: "YEARLY",
+};
+
+const ymd = (d: Date) => d.toISOString().slice(0, 10);
+
+/**
+ * Cria um checkout hospedado no Asaas e devolve o link pra onde redirecionar o
+ * cliente. Cartão → assinatura RECORRENTE (debita sozinho a cada ciclo). Pix →
+ * cobrança AVULSA (DETACHED) do período (renova manualmente depois).
+ *
+ * O Asaas coleta nome/CPF/endereço na página dele — por isso não mandamos
+ * customerData. Para renovação de logado, o e-mail vai na externalReference.
+ */
+export async function criarCheckoutAsaas(opts: {
+  planoId: string;
+  metodo: "CARTAO" | "PIX";
+  cupom?: string | null;
+  emailLogado?: string | null;
+}): Promise<{ ok: boolean; link?: string; erro?: string }> {
+  const plano = planoPorId(opts.planoId);
+  if (!plano) return { ok: false, erro: "Plano inválido." };
+
+  // Cupom → desconto (aplicado ao valor cobrado). Cupom inválido é ignorado.
+  let desconto = 0;
+  let cupomValido: string | null = null;
+  if (opts.cupom?.trim()) {
+    const cup = opts.cupom.trim().toUpperCase();
+    const af = await prisma.afiliado.findUnique({ where: { cupom: cup }, select: { descontoPct: true, ativo: true } });
+    if (af?.ativo) {
+      desconto = af.descontoPct;
+      cupomValido = cup;
+    }
+  }
+  const valor = Math.round(plano.valor * (1 - desconto / 100) * 100) / 100;
+  const ref = montarReferencia(plano.meses, cupomValido, opts.emailLogado ?? null);
+
+  const hoje = new Date();
+  const body: Record<string, unknown> = {
+    minutesToExpire: 60,
+    callback: {
+      successUrl: "https://apexmonitor.com.br/assinatura/sucesso",
+      cancelUrl: "https://apexmonitor.com.br/assinar",
+      expiredUrl: "https://apexmonitor.com.br/assinar",
+    },
+    items: [{ name: `ApexMonitor ${plano.nome}`, description: `Assinatura ${plano.nome} do ApexMonitor`, quantity: 1, value: valor }],
+    externalReference: ref,
+  };
+
+  if (opts.metodo === "CARTAO") {
+    body.billingTypes = ["CREDIT_CARD"];
+    body.chargeTypes = ["RECURRENT"];
+    body.subscription = {
+      cycle: CICLO_ASAAS[plano.id],
+      nextDueDate: ymd(hoje),
+      endDate: ymd(new Date(hoje.getTime() + 5 * 365 * 86_400_000)), // ~5 anos = "indefinido"
+    };
+  } else {
+    body.billingTypes = ["PIX"];
+    body.chargeTypes = ["DETACHED"];
+  }
+
+  const r = await asaasFetch("/checkouts", { method: "POST", body });
+  if (!r.ok || !r.body || typeof r.body !== "object") {
+    const errs = (r.body as { errors?: { description?: string }[] } | null)?.errors;
+    const msg = errs?.[0]?.description ?? `Falha ao criar checkout (${r.status})`;
+    console.error(`[asaas] checkout falhou: ${msg}`);
+    return { ok: false, erro: msg };
+  }
+  const link = (r.body as { link?: string }).link;
+  if (!link) return { ok: false, erro: "Checkout sem link de pagamento." };
+  return { ok: true, link };
 }

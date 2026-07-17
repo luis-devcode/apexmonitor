@@ -40,7 +40,7 @@ export default async function AssinaturaPage() {
 
           {!bloqueado && (
             <a
-              href="https://wa.me/"
+              href="/assinar"
               className="mt-5 flex h-11 w-full items-center justify-center rounded-xl bg-accent text-sm font-black text-accent-ink shadow-[0_8px_26px_rgba(59,130,246,0.3)] transition hover:bg-accent-hover"
             >
               Renovar assinatura

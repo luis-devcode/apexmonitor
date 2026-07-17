@@ -29,16 +29,20 @@ export default async function ContaPage() {
 
   return (
     <AppShell>
-      <header className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-border bg-bg/90 px-5 py-3 backdrop-blur md:px-7">
-        <div>
-          <h1 className="text-[15px] font-bold">Minha Conta</h1>
-          <p className="hidden text-xs text-muted sm:block">Seus dados e sua assinatura.</p>
+      <header className="sticky top-0 z-10 border-b border-border bg-bg/85 px-4 py-3.5 backdrop-blur-xl sm:px-5 md:px-7">
+        <div className="mx-auto flex w-full max-w-[1180px] items-center justify-between gap-4">
+          <div>
+            <p className="mono-label mb-1 text-accent">Configurações</p>
+            <h1 className="text-base font-extrabold tracking-[-0.02em] text-text">Minha Conta</h1>
+          </div>
+          <span className="hidden rounded-full border border-border bg-surface-2/60 px-3 py-1.5 text-[10px] font-bold text-muted sm:block">Perfil e assinatura</span>
         </div>
       </header>
 
       <ContaWorkspace
         nome={user.nome}
         email={user.email}
+        role={user.role}
         plano={user.plano}
         diasRestantes={diasRestantes}
         vencimento={user.assinaturaAte ? user.assinaturaAte.toISOString() : null}
