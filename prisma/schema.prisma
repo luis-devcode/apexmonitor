@@ -99,6 +99,8 @@ model Pagamento {
   comissaoPct   Float     @default(0)
   comissaoValor Float     @default(0)
   comissaoPaga  Boolean   @default(false)
+  // Quando o repasse foi feito ao afiliado (null = ainda devendo).
+  comissaoPagaEm DateTime?
   createdAt     DateTime  @default(now())
 
   @@index([userId])

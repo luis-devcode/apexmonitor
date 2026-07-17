@@ -80,6 +80,7 @@ const NAV_ADMIN: NavSection = {
   items: [
     { href: "/admin", label: "Clientes", icon: I.users },
     { href: "/admin/afiliados", label: "Afiliados", icon: I.split },
+    { href: "/admin/comissoes", label: "Comissões", icon: I.receipt },
   ],
 };
 

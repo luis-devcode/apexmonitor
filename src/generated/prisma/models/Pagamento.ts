@@ -51,6 +51,7 @@ export type PagamentoMinAggregateOutputType = {
   comissaoPct: number | null
   comissaoValor: number | null
   comissaoPaga: boolean | null
+  comissaoPagaEm: Date | null
   createdAt: Date | null
 }
 
@@ -65,6 +66,7 @@ export type PagamentoMaxAggregateOutputType = {
   comissaoPct: number | null
   comissaoValor: number | null
   comissaoPaga: boolean | null
+  comissaoPagaEm: Date | null
   createdAt: Date | null
 }
 
@@ -79,6 +81,7 @@ export type PagamentoCountAggregateOutputType = {
   comissaoPct: number
   comissaoValor: number
   comissaoPaga: number
+  comissaoPagaEm: number
   createdAt: number
   _all: number
 }
@@ -109,6 +112,7 @@ export type PagamentoMinAggregateInputType = {
   comissaoPct?: true
   comissaoValor?: true
   comissaoPaga?: true
+  comissaoPagaEm?: true
   createdAt?: true
 }
 
@@ -123,6 +127,7 @@ export type PagamentoMaxAggregateInputType = {
   comissaoPct?: true
   comissaoValor?: true
   comissaoPaga?: true
+  comissaoPagaEm?: true
   createdAt?: true
 }
 
@@ -137,6 +142,7 @@ export type PagamentoCountAggregateInputType = {
   comissaoPct?: true
   comissaoValor?: true
   comissaoPaga?: true
+  comissaoPagaEm?: true
   createdAt?: true
   _all?: true
 }
@@ -238,6 +244,7 @@ export type PagamentoGroupByOutputType = {
   comissaoPct: number
   comissaoValor: number
   comissaoPaga: boolean
+  comissaoPagaEm: Date | null
   createdAt: Date
   _count: PagamentoCountAggregateOutputType | null
   _avg: PagamentoAvgAggregateOutputType | null
@@ -275,6 +282,7 @@ export type PagamentoWhereInput = {
   comissaoPct?: Prisma.FloatFilter<"Pagamento"> | number
   comissaoValor?: Prisma.FloatFilter<"Pagamento"> | number
   comissaoPaga?: Prisma.BoolFilter<"Pagamento"> | boolean
+  comissaoPagaEm?: Prisma.DateTimeNullableFilter<"Pagamento"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Pagamento"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   afiliado?: Prisma.XOR<Prisma.AfiliadoNullableScalarRelationFilter, Prisma.AfiliadoWhereInput> | null
@@ -291,6 +299,7 @@ export type PagamentoOrderByWithRelationInput = {
   comissaoPct?: Prisma.SortOrder
   comissaoValor?: Prisma.SortOrder
   comissaoPaga?: Prisma.SortOrder
+  comissaoPagaEm?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   afiliado?: Prisma.AfiliadoOrderByWithRelationInput
@@ -310,6 +319,7 @@ export type PagamentoWhereUniqueInput = Prisma.AtLeast<{
   comissaoPct?: Prisma.FloatFilter<"Pagamento"> | number
   comissaoValor?: Prisma.FloatFilter<"Pagamento"> | number
   comissaoPaga?: Prisma.BoolFilter<"Pagamento"> | boolean
+  comissaoPagaEm?: Prisma.DateTimeNullableFilter<"Pagamento"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Pagamento"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   afiliado?: Prisma.XOR<Prisma.AfiliadoNullableScalarRelationFilter, Prisma.AfiliadoWhereInput> | null
@@ -326,6 +336,7 @@ export type PagamentoOrderByWithAggregationInput = {
   comissaoPct?: Prisma.SortOrder
   comissaoValor?: Prisma.SortOrder
   comissaoPaga?: Prisma.SortOrder
+  comissaoPagaEm?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.PagamentoCountOrderByAggregateInput
   _avg?: Prisma.PagamentoAvgOrderByAggregateInput
@@ -348,6 +359,7 @@ export type PagamentoScalarWhereWithAggregatesInput = {
   comissaoPct?: Prisma.FloatWithAggregatesFilter<"Pagamento"> | number
   comissaoValor?: Prisma.FloatWithAggregatesFilter<"Pagamento"> | number
   comissaoPaga?: Prisma.BoolWithAggregatesFilter<"Pagamento"> | boolean
+  comissaoPagaEm?: Prisma.DateTimeNullableWithAggregatesFilter<"Pagamento"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Pagamento"> | Date | string
 }
 
@@ -360,6 +372,7 @@ export type PagamentoCreateInput = {
   comissaoPct?: number
   comissaoValor?: number
   comissaoPaga?: boolean
+  comissaoPagaEm?: Date | string | null
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutPagamentosInput
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutPagamentosInput
@@ -376,6 +389,7 @@ export type PagamentoUncheckedCreateInput = {
   comissaoPct?: number
   comissaoValor?: number
   comissaoPaga?: boolean
+  comissaoPagaEm?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -388,6 +402,7 @@ export type PagamentoUpdateInput = {
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoValor?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoPaga?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  comissaoPagaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutPagamentosNestedInput
   afiliado?: Prisma.AfiliadoUpdateOneWithoutPagamentosNestedInput
@@ -404,6 +419,7 @@ export type PagamentoUncheckedUpdateInput = {
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoValor?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoPaga?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  comissaoPagaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -418,6 +434,7 @@ export type PagamentoCreateManyInput = {
   comissaoPct?: number
   comissaoValor?: number
   comissaoPaga?: boolean
+  comissaoPagaEm?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -430,6 +447,7 @@ export type PagamentoUpdateManyMutationInput = {
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoValor?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoPaga?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  comissaoPagaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -444,6 +462,7 @@ export type PagamentoUncheckedUpdateManyInput = {
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoValor?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoPaga?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  comissaoPagaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -468,6 +487,7 @@ export type PagamentoCountOrderByAggregateInput = {
   comissaoPct?: Prisma.SortOrder
   comissaoValor?: Prisma.SortOrder
   comissaoPaga?: Prisma.SortOrder
+  comissaoPagaEm?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -489,6 +509,7 @@ export type PagamentoMaxOrderByAggregateInput = {
   comissaoPct?: Prisma.SortOrder
   comissaoValor?: Prisma.SortOrder
   comissaoPaga?: Prisma.SortOrder
+  comissaoPagaEm?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -503,6 +524,7 @@ export type PagamentoMinOrderByAggregateInput = {
   comissaoPct?: Prisma.SortOrder
   comissaoValor?: Prisma.SortOrder
   comissaoPaga?: Prisma.SortOrder
+  comissaoPagaEm?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -614,6 +636,7 @@ export type PagamentoCreateWithoutUserInput = {
   comissaoPct?: number
   comissaoValor?: number
   comissaoPaga?: boolean
+  comissaoPagaEm?: Date | string | null
   createdAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutPagamentosInput
 }
@@ -628,6 +651,7 @@ export type PagamentoUncheckedCreateWithoutUserInput = {
   comissaoPct?: number
   comissaoValor?: number
   comissaoPaga?: boolean
+  comissaoPagaEm?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -671,6 +695,7 @@ export type PagamentoScalarWhereInput = {
   comissaoPct?: Prisma.FloatFilter<"Pagamento"> | number
   comissaoValor?: Prisma.FloatFilter<"Pagamento"> | number
   comissaoPaga?: Prisma.BoolFilter<"Pagamento"> | boolean
+  comissaoPagaEm?: Prisma.DateTimeNullableFilter<"Pagamento"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Pagamento"> | Date | string
 }
 
@@ -683,6 +708,7 @@ export type PagamentoCreateWithoutAfiliadoInput = {
   comissaoPct?: number
   comissaoValor?: number
   comissaoPaga?: boolean
+  comissaoPagaEm?: Date | string | null
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutPagamentosInput
 }
@@ -697,6 +723,7 @@ export type PagamentoUncheckedCreateWithoutAfiliadoInput = {
   comissaoPct?: number
   comissaoValor?: number
   comissaoPaga?: boolean
+  comissaoPagaEm?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -736,6 +763,7 @@ export type PagamentoCreateManyUserInput = {
   comissaoPct?: number
   comissaoValor?: number
   comissaoPaga?: boolean
+  comissaoPagaEm?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -748,6 +776,7 @@ export type PagamentoUpdateWithoutUserInput = {
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoValor?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoPaga?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  comissaoPagaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutPagamentosNestedInput
 }
@@ -762,6 +791,7 @@ export type PagamentoUncheckedUpdateWithoutUserInput = {
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoValor?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoPaga?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  comissaoPagaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -775,6 +805,7 @@ export type PagamentoUncheckedUpdateManyWithoutUserInput = {
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoValor?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoPaga?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  comissaoPagaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -788,6 +819,7 @@ export type PagamentoCreateManyAfiliadoInput = {
   comissaoPct?: number
   comissaoValor?: number
   comissaoPaga?: boolean
+  comissaoPagaEm?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -800,6 +832,7 @@ export type PagamentoUpdateWithoutAfiliadoInput = {
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoValor?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoPaga?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  comissaoPagaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutPagamentosNestedInput
 }
@@ -814,6 +847,7 @@ export type PagamentoUncheckedUpdateWithoutAfiliadoInput = {
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoValor?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoPaga?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  comissaoPagaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -827,6 +861,7 @@ export type PagamentoUncheckedUpdateManyWithoutAfiliadoInput = {
   comissaoPct?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoValor?: Prisma.FloatFieldUpdateOperationsInput | number
   comissaoPaga?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  comissaoPagaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -843,6 +878,7 @@ export type PagamentoSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   comissaoPct?: boolean
   comissaoValor?: boolean
   comissaoPaga?: boolean
+  comissaoPagaEm?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   afiliado?: boolean | Prisma.Pagamento$afiliadoArgs<ExtArgs>
@@ -859,6 +895,7 @@ export type PagamentoSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   comissaoPct?: boolean
   comissaoValor?: boolean
   comissaoPaga?: boolean
+  comissaoPagaEm?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   afiliado?: boolean | Prisma.Pagamento$afiliadoArgs<ExtArgs>
@@ -875,6 +912,7 @@ export type PagamentoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   comissaoPct?: boolean
   comissaoValor?: boolean
   comissaoPaga?: boolean
+  comissaoPagaEm?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   afiliado?: boolean | Prisma.Pagamento$afiliadoArgs<ExtArgs>
@@ -891,10 +929,11 @@ export type PagamentoSelectScalar = {
   comissaoPct?: boolean
   comissaoValor?: boolean
   comissaoPaga?: boolean
+  comissaoPagaEm?: boolean
   createdAt?: boolean
 }
 
-export type PagamentoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "valor" | "meses" | "metodo" | "asaasId" | "afiliadoId" | "comissaoPct" | "comissaoValor" | "comissaoPaga" | "createdAt", ExtArgs["result"]["pagamento"]>
+export type PagamentoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "valor" | "meses" | "metodo" | "asaasId" | "afiliadoId" | "comissaoPct" | "comissaoValor" | "comissaoPaga" | "comissaoPagaEm" | "createdAt", ExtArgs["result"]["pagamento"]>
 export type PagamentoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   afiliado?: boolean | Prisma.Pagamento$afiliadoArgs<ExtArgs>
@@ -925,6 +964,7 @@ export type $PagamentoPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     comissaoPct: number
     comissaoValor: number
     comissaoPaga: boolean
+    comissaoPagaEm: Date | null
     createdAt: Date
   }, ExtArgs["result"]["pagamento"]>
   composites: {}
@@ -1361,6 +1401,7 @@ export interface PagamentoFieldRefs {
   readonly comissaoPct: Prisma.FieldRef<"Pagamento", 'Float'>
   readonly comissaoValor: Prisma.FieldRef<"Pagamento", 'Float'>
   readonly comissaoPaga: Prisma.FieldRef<"Pagamento", 'Boolean'>
+  readonly comissaoPagaEm: Prisma.FieldRef<"Pagamento", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Pagamento", 'DateTime'>
 }
     

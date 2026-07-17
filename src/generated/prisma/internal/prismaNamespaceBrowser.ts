@@ -136,6 +136,7 @@ export const PagamentoScalarFieldEnum = {
   comissaoPct: 'comissaoPct',
   comissaoValor: 'comissaoValor',
   comissaoPaga: 'comissaoPaga',
+  comissaoPagaEm: 'comissaoPagaEm',
   createdAt: 'createdAt'
 } as const
 
