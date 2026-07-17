@@ -46,17 +46,17 @@ curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
 apt update && apt install -y caddy
 ```
 
-**Firewall (painel da Hetzner, grátis).** Aplique **depois** de confirmar que o SSH
-entra — regra errada aqui tranca o acesso e obriga a recriar o servidor. Bloqueia
-na rede, antes de chegar na máquina, então nem gasta CPU. Entrada permitida só em:
+**Firewall (`ufw`).** Aplique **depois** de confirmar que o SSH entra, e **libere a
+22 antes de ativar** — senão o firewall expulsa você antes de terminar de configurá-lo.
 
-| Porta | Para quê |
+| Porta | Quem entra |
 |---|---|
-| 22 | SSH |
-| 80 | Let's Encrypt (desafio do certificado) + redirect pra 443 |
-| 443 | HTTPS |
+| 22 | qualquer lugar — é o único caminho para consertar um erro aqui |
+| 80 / 443 | **só as faixas da Cloudflare** (ver Passo 7) |
 
-Postgres (5432) **nunca** exposto — o app fala com ele por `localhost`.
+Postgres (5432) e o Next (3000) **nunca** expostos: ambos escutam só em `127.0.0.1`.
+Confira com `ss -tlnp` — se aparecer `0.0.0.0:3000`, a porta está alcançável de fora
+e contorna o HTTPS.
 
 **Swap.** O `npm run build` do Next pede ~2 GB; com o Postgres junto, os 4 GB ficam
 sem margem. Com swap o build fica lento em vez de morrer por OOM:
@@ -120,9 +120,6 @@ nano integrations/monitorodds/.env   # MO_EMAIL, MO_PASS
 ```
 
 ## Passo 4 — Migrar o Prisma de SQLite → Postgres
-
-> Esta é a única mudança de código do deploy. Não foi feita no dev porque não há
-> Postgres local pra testar; aqui, contra o banco real, ela é testada na hora.
 
 **✅ Já feito e commitado** (`c712751`). O repositório inteiro é Postgres: o Prisma
 não aceita provider por variável de ambiente, então SQLite no dev exigiria manter
