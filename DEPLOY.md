@@ -455,8 +455,28 @@ e-mail via Resend) ou renova → registra `Pagamento` (idempotente pelo `asaasId
 duração e a origem.
 
 **Sandbox primeiro:** `ASAAS_ENV=sandbox` usa `api-sandbox.asaas.com` (dinheiro
-falso). Trocar para `producao` só depois de confirmar o segmento com o Asaas (aposta
-é segmento sensível — risco de congelar a conta com dinheiro dentro).
+falso). Testado ponta a ponta em 17/07/2026: cobrança → webhook → conta criada +
+acesso + comissão, tudo automático.
+
+**Checkout:** `/assinar` (público) cria um checkout hospedado (POST /checkouts).
+Cartão = `chargeTypes:["RECURRENT"]` + `billingTypes:["CREDIT_CARD"]` (renova
+sozinho). Pix = `["DETACHED"]` + `["PIX"]` (avulso) — **exige uma chave Pix criada
+no painel do Asaas**, senão dá erro. Não mandamos `customerData`: o Asaas coleta
+nome/CPF/endereço na página dele (zero PCI do nosso lado). O `externalReference`
+carrega `meses`, `cupom` e (em renovação de logado) o `email` da conta.
+
+### Passar para PRODUÇÃO (quando o segmento for confirmado)
+
+1. Confirmar o segmento (aposta/software) com o Asaas **por escrito**.
+2. Criar uma **chave Pix** na conta de produção do Asaas (ativa o Pix).
+3. Pegar a **chave de API de produção** (`$aact_prod_...`) → colocar em
+   `/opt/apexmonitor/.env.secrets` (NÃO no `.env` — ver a nota do `$`).
+4. Trocar `ASAAS_ENV` para `producao` no `.env`.
+5. Registrar o **webhook de produção** (POST /webhooks) apontando para
+   `https://apexmonitor.com.br/api/asaas/webhook`, com `authToken` =
+   `ASAAS_WEBHOOK_TOKEN`, eventos `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED`.
+6. `systemctl restart apexmonitor` e fazer **uma compra real de teste** (valor
+   baixo) para confirmar a conta sendo criada.
 
 ## Sobre a fonte de dados
 
