@@ -169,11 +169,16 @@ User=apexmonitor
 Group=apexmonitor
 WorkingDirectory=/opt/apexmonitor
 EnvironmentFile=/opt/apexmonitor/.env
+# Binário direto, sem npm no meio: o npm não repassa sinais ao filho.
 # -H 127.0.0.1: sem isto o Next escuta em 0.0.0.0 e a porta 3000 fica alcançável
 # de fora, contornando o HTTPS do Caddy.
-ExecStart=/usr/bin/npm run start -- -H 127.0.0.1 -p 3000
+ExecStart=/opt/apexmonitor/node_modules/.bin/next start -H 127.0.0.1 -p 3000
 Restart=always
-RestartSec=5
+RestartSec=2
+TimeoutStopSec=10
+KillSignal=SIGKILL
+KillMode=mixed
+SuccessExitStatus=SIGKILL
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
@@ -183,8 +188,35 @@ ReadWritePaths=/opt/apexmonitor
 WantedBy=multi-user.target
 ```
 
-Crie `/etc/systemd/system/apexmonitor-coletor.service` (mesmo cabeçalho de
-segurança, `ExecStart=/usr/bin/npm run collector`, `RestartSec=10`).
+Crie `/etc/systemd/system/apexmonitor-coletor.service` igual, com
+`WorkingDirectory=/opt/apexmonitor/integrations/monitorodds` e
+`ExecStart=/usr/bin/node --env-file-if-exists=.env src/collect.mjs`.
+
+### ⚠️ `KillSignal=SIGKILL` — por que, e o que custa
+
+Sem essas quatro linhas, **cada restart derrubava o site por 90 segundos e mandava
+um e-mail de falha**. A cadeia:
+
+1. O **Next não sai com SIGTERM**. Ele fecha a porta e espera as conexões drenarem
+   — mas o Caddy mantém uma keep-alive aberta, que nunca fecha. Ele espera para
+   sempre. (Medido: vivo após 30s sem ninguém conectado.)
+2. Nesse intervalo o site **já está fora** (porta fechada) enquanto
+   `systemctl is-active` ainda diz `active` — o PID existe. Estado zumbi.
+3. No fim do prazo o systemd manda SIGKILL e marca `Result=timeout`. **Timeout é
+   falha** → dispara o `OnFailure` → e-mail dizendo que o site caiu, a cada deploy.
+
+`SuccessExitStatus` **não resolve**: ele perdoa código de saída, não o estouro do
+prazo. E esperar mais só aumenta o tempo fora do ar. Como o Next não desliga de
+jeito nenhum, esperar troca "morre agora" por "fica fora e morre depois".
+
+Resultado: **restart de 90.000ms → 65ms**, sem alerta falso.
+
+**O custo:** não há desligamento gracioso — requisição em andamento é cortada. Vale
+para este app (stateless, requisições curtas). Se um dia houver operação longa no
+servidor, isto precisa ser revisto.
+
+**O outro custo:** `SuccessExitStatus=SIGKILL` também faz um kill por OOM parecer
+sucesso. Com 4 GB e swap, é improvável — mas é um alerta a menos.
 
 > **Teste o login do MonitorOdds ANTES de habilitar o coletor.** Com credencial
 > inválida ele tenta autenticar a cada 5s e o MonitorOdds bloqueia o IP por 30
@@ -311,7 +343,7 @@ generate + db push → **build** → restart, e termina conferindo se `/login` r
 > **O build é o portão.** Ele roda **antes** do restart e o script usa `set -e`: se
 > o build falhar, nada é reiniciado e o site continua no ar com a versão anterior.
 > Código quebrado não alcança o serviço. A única janela de indisponibilidade são os
-> ~2s do restart.
+> ~1s do restart.
 
 > **`safe.directory`:** o repo é dono do usuário `apexmonitor` e o deploy roda como
 > root, então o git recusa por "dubious ownership" até rodar
