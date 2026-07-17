@@ -10,6 +10,8 @@
  */
 export type * from './models/User'
 export type * from './models/Session'
+export type * from './models/Afiliado'
+export type * from './models/Pagamento'
 export type * from './models/Parceiro'
 export type * from './models/Casa'
 export type * from './models/Conta'

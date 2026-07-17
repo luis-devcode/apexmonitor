@@ -26,9 +26,14 @@ model User {
   // Assinatura mensal: enquanto `assinaturaAte` for no futuro, o acesso é liberado.
   assinaturaAte DateTime?
   plano        String?
+  // De qual afiliado este cliente veio. Atribuição PERMANENTE: definida na 1ª
+  // assinatura e nunca reescrita — é o que sustenta a comissão recorrente.
+  afiliadoId   String?
+  afiliado     Afiliado? @relation(fields: [afiliadoId], references: [id], onDelete: SetNull)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   sessions     Session[]
+  pagamentos   Pagamento[]
 
   // Todos os dados do produto pertencem a um usuário (isolamento multi-tenant).
   parceiros    Parceiro[]
@@ -52,6 +57,52 @@ model Session {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// Quem divulga o ApexMonitor por um cupom. Cadastrado pelo admin.
+model Afiliado {
+  id           String    @id @default(cuid())
+  nome         String
+  // Cupom que o cliente digita: dá desconto a ele E rastreia a origem.
+  cupom        String    @unique
+  // % que o afiliado recebe sobre cada pagamento do cliente indicado.
+  comissaoPct  Float     @default(10)
+  // % de desconto que o cupom dá ao cliente na assinatura.
+  descontoPct  Float     @default(10)
+  // Chave Pix para onde o repasse é enviado (pagamento manual no início).
+  chavePix     String?
+  ativo        Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  clientes     User[]
+  pagamentos   Pagamento[]
+
+  @@index([cupom])
+}
+
+// Cada cobrança confirmada (pelo Asaas ou lançada na mão pelo admin). É a base
+// tanto do controle de assinatura quanto do relatório de comissão.
+model Pagamento {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  valor         Float
+  // Meses de acesso que este pagamento concedeu (1, 2, 12...).
+  meses         Int       @default(1)
+  metodo        String    @default("MANUAL") // MANUAL | PIX | CARTAO
+  // ID da cobrança no Asaas — evita processar o mesmo webhook duas vezes.
+  asaasId       String?   @unique
+  // Afiliado e % CONGELADOS no momento do pagamento: mudar a % do afiliado depois
+  // não pode reescrever quanto ele já ganhou no histórico.
+  afiliadoId    String?
+  afiliado      Afiliado? @relation(fields: [afiliadoId], references: [id], onDelete: SetNull)
+  comissaoPct   Float     @default(0)
+  comissaoValor Float     @default(0)
+  comissaoPaga  Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([afiliadoId])
 }
 
 model Parceiro {

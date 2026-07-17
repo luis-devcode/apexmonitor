@@ -73,7 +73,14 @@ const NAV: NavSection[] = [
   },
 ];
 
-const currentNavItem = (pathname: string) => NAV
+// Seção visível só para ADMIN. Fica fora do NAV para não vazar nem no HTML de um
+// cliente comum — a proteção real está na página, isto é só a navegação.
+const NAV_ADMIN: NavSection = {
+  label: "Administração",
+  items: [{ href: "/admin", label: "Clientes", icon: I.users }],
+};
+
+const currentNavItem = (pathname: string) => [...NAV, NAV_ADMIN]
   .flatMap((section) => section.items)
   .filter((item) => item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`))
   .sort((a, b) => b.href.length - a.href.length)[0];
@@ -138,9 +145,10 @@ function UserMenu({ user }: { user: ShellUser }) {
   );
 }
 
-function Sidebar({ pathname, onNavigate }: { pathname: string; onNavigate: () => void }) {
+function Sidebar({ pathname, onNavigate, role }: { pathname: string; onNavigate: () => void; role: string }) {
   const activeHref = currentNavItem(pathname)?.href;
   const ativo = (href: string) => href === activeHref;
+  const sections = role === "ADMIN" ? [...NAV, NAV_ADMIN] : NAV;
   return (
     <>
       <div className="flex h-[72px] shrink-0 items-center border-b border-border px-5">
@@ -151,7 +159,7 @@ function Sidebar({ pathname, onNavigate }: { pathname: string; onNavigate: () =>
       </div>
 
       <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Navegação principal">
-        {NAV.map((section, sectionIndex) => (
+        {sections.map((section, sectionIndex) => (
           <div key={section.label} className={sectionIndex === 0 ? "" : "mt-5"}>
             <p className="px-2.5 font-mono text-[8px] font-semibold uppercase tracking-[0.2em] text-muted/80">{section.label}</p>
             <div className="mt-1.5 space-y-0.5">
@@ -190,7 +198,7 @@ export default function AppShellClient({ children, user }: { children: ReactNode
       {mobileOpen && <button type="button" aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-50 bg-[#01040a]/75 backdrop-blur-sm lg:hidden" />}
 
       <aside className={`sidebar-surface fixed inset-y-0 left-0 z-[60] flex w-[268px] flex-col border-r border-border transition-transform duration-200 lg:static lg:z-20 lg:translate-x-0 ${mobileOpen ? "translate-x-0 animate-sidebar-in" : "-translate-x-full"}`}>
-        <Sidebar pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+        <Sidebar pathname={pathname} onNavigate={() => setMobileOpen(false)} role={user.role} />
       </aside>
 
       <div className="relative flex min-w-0 flex-1 flex-col">

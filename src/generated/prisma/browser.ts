@@ -28,6 +28,16 @@ export type User = Prisma.UserModel
  */
 export type Session = Prisma.SessionModel
 /**
+ * Model Afiliado
+ * 
+ */
+export type Afiliado = Prisma.AfiliadoModel
+/**
+ * Model Pagamento
+ * 
+ */
+export type Pagamento = Prisma.PagamentoModel
+/**
  * Model Parceiro
  * 
  */

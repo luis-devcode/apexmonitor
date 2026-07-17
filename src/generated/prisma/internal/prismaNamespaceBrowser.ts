@@ -53,6 +53,8 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Session: 'Session',
+  Afiliado: 'Afiliado',
+  Pagamento: 'Pagamento',
   Parceiro: 'Parceiro',
   Casa: 'Casa',
   Conta: 'Conta',
@@ -89,6 +91,7 @@ export const UserScalarFieldEnum = {
   status: 'status',
   assinaturaAte: 'assinaturaAte',
   plano: 'plano',
+  afiliadoId: 'afiliadoId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -105,6 +108,38 @@ export const SessionScalarFieldEnum = {
 } as const
 
 export type SessionScalarFieldEnum = (typeof SessionScalarFieldEnum)[keyof typeof SessionScalarFieldEnum]
+
+
+export const AfiliadoScalarFieldEnum = {
+  id: 'id',
+  nome: 'nome',
+  cupom: 'cupom',
+  comissaoPct: 'comissaoPct',
+  descontoPct: 'descontoPct',
+  chavePix: 'chavePix',
+  ativo: 'ativo',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AfiliadoScalarFieldEnum = (typeof AfiliadoScalarFieldEnum)[keyof typeof AfiliadoScalarFieldEnum]
+
+
+export const PagamentoScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  valor: 'valor',
+  meses: 'meses',
+  metodo: 'metodo',
+  asaasId: 'asaasId',
+  afiliadoId: 'afiliadoId',
+  comissaoPct: 'comissaoPct',
+  comissaoValor: 'comissaoValor',
+  comissaoPaga: 'comissaoPaga',
+  createdAt: 'createdAt'
+} as const
+
+export type PagamentoScalarFieldEnum = (typeof PagamentoScalarFieldEnum)[keyof typeof PagamentoScalarFieldEnum]
 
 
 export const ParceiroScalarFieldEnum = {

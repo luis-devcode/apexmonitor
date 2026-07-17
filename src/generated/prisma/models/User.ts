@@ -33,6 +33,7 @@ export type UserMinAggregateOutputType = {
   status: string | null
   assinaturaAte: Date | null
   plano: string | null
+  afiliadoId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -46,6 +47,7 @@ export type UserMaxAggregateOutputType = {
   status: string | null
   assinaturaAte: Date | null
   plano: string | null
+  afiliadoId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -59,6 +61,7 @@ export type UserCountAggregateOutputType = {
   status: number
   assinaturaAte: number
   plano: number
+  afiliadoId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -74,6 +77,7 @@ export type UserMinAggregateInputType = {
   status?: true
   assinaturaAte?: true
   plano?: true
+  afiliadoId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -87,6 +91,7 @@ export type UserMaxAggregateInputType = {
   status?: true
   assinaturaAte?: true
   plano?: true
+  afiliadoId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -100,6 +105,7 @@ export type UserCountAggregateInputType = {
   status?: true
   assinaturaAte?: true
   plano?: true
+  afiliadoId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -186,6 +192,7 @@ export type UserGroupByOutputType = {
   status: string
   assinaturaAte: Date | null
   plano: string | null
+  afiliadoId: string | null
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -220,9 +227,12 @@ export type UserWhereInput = {
   status?: Prisma.StringFilter<"User"> | string
   assinaturaAte?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   plano?: Prisma.StringNullableFilter<"User"> | string | null
+  afiliadoId?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  afiliado?: Prisma.XOR<Prisma.AfiliadoNullableScalarRelationFilter, Prisma.AfiliadoWhereInput> | null
   sessions?: Prisma.SessionListRelationFilter
+  pagamentos?: Prisma.PagamentoListRelationFilter
   parceiros?: Prisma.ParceiroListRelationFilter
   casas?: Prisma.CasaListRelationFilter
   contas?: Prisma.ContaListRelationFilter
@@ -243,9 +253,12 @@ export type UserOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   assinaturaAte?: Prisma.SortOrderInput | Prisma.SortOrder
   plano?: Prisma.SortOrderInput | Prisma.SortOrder
+  afiliadoId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  afiliado?: Prisma.AfiliadoOrderByWithRelationInput
   sessions?: Prisma.SessionOrderByRelationAggregateInput
+  pagamentos?: Prisma.PagamentoOrderByRelationAggregateInput
   parceiros?: Prisma.ParceiroOrderByRelationAggregateInput
   casas?: Prisma.CasaOrderByRelationAggregateInput
   contas?: Prisma.ContaOrderByRelationAggregateInput
@@ -269,9 +282,12 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.StringFilter<"User"> | string
   assinaturaAte?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   plano?: Prisma.StringNullableFilter<"User"> | string | null
+  afiliadoId?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  afiliado?: Prisma.XOR<Prisma.AfiliadoNullableScalarRelationFilter, Prisma.AfiliadoWhereInput> | null
   sessions?: Prisma.SessionListRelationFilter
+  pagamentos?: Prisma.PagamentoListRelationFilter
   parceiros?: Prisma.ParceiroListRelationFilter
   casas?: Prisma.CasaListRelationFilter
   contas?: Prisma.ContaListRelationFilter
@@ -292,6 +308,7 @@ export type UserOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   assinaturaAte?: Prisma.SortOrderInput | Prisma.SortOrder
   plano?: Prisma.SortOrderInput | Prisma.SortOrder
+  afiliadoId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -311,6 +328,7 @@ export type UserScalarWhereWithAggregatesInput = {
   status?: Prisma.StringWithAggregatesFilter<"User"> | string
   assinaturaAte?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   plano?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  afiliadoId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -326,7 +344,9 @@ export type UserCreateInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -347,9 +367,11 @@ export type UserUncheckedCreateInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -372,7 +394,9 @@ export type UserUpdateInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -393,9 +417,11 @@ export type UserUncheckedUpdateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -416,6 +442,7 @@ export type UserCreateManyInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -442,6 +469,7 @@ export type UserUncheckedUpdateManyInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -455,6 +483,7 @@ export type UserCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   assinaturaAte?: Prisma.SortOrder
   plano?: Prisma.SortOrder
+  afiliadoId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -468,6 +497,7 @@ export type UserMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   assinaturaAte?: Prisma.SortOrder
   plano?: Prisma.SortOrder
+  afiliadoId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -481,6 +511,7 @@ export type UserMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   assinaturaAte?: Prisma.SortOrder
   plano?: Prisma.SortOrder
+  afiliadoId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -488,6 +519,16 @@ export type UserMinOrderByAggregateInput = {
 export type UserScalarRelationFilter = {
   is?: Prisma.UserWhereInput
   isNot?: Prisma.UserWhereInput
+}
+
+export type UserListRelationFilter = {
+  every?: Prisma.UserWhereInput
+  some?: Prisma.UserWhereInput
+  none?: Prisma.UserWhereInput
+}
+
+export type UserOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -518,6 +559,62 @@ export type UserUpdateOneRequiredWithoutSessionsNestedInput = {
   upsert?: Prisma.UserUpsertWithoutSessionsInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSessionsInput, Prisma.UserUpdateWithoutSessionsInput>, Prisma.UserUncheckedUpdateWithoutSessionsInput>
+}
+
+export type UserCreateNestedManyWithoutAfiliadoInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAfiliadoInput, Prisma.UserUncheckedCreateWithoutAfiliadoInput> | Prisma.UserCreateWithoutAfiliadoInput[] | Prisma.UserUncheckedCreateWithoutAfiliadoInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAfiliadoInput | Prisma.UserCreateOrConnectWithoutAfiliadoInput[]
+  createMany?: Prisma.UserCreateManyAfiliadoInputEnvelope
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+}
+
+export type UserUncheckedCreateNestedManyWithoutAfiliadoInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAfiliadoInput, Prisma.UserUncheckedCreateWithoutAfiliadoInput> | Prisma.UserCreateWithoutAfiliadoInput[] | Prisma.UserUncheckedCreateWithoutAfiliadoInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAfiliadoInput | Prisma.UserCreateOrConnectWithoutAfiliadoInput[]
+  createMany?: Prisma.UserCreateManyAfiliadoInputEnvelope
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+}
+
+export type UserUpdateManyWithoutAfiliadoNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAfiliadoInput, Prisma.UserUncheckedCreateWithoutAfiliadoInput> | Prisma.UserCreateWithoutAfiliadoInput[] | Prisma.UserUncheckedCreateWithoutAfiliadoInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAfiliadoInput | Prisma.UserCreateOrConnectWithoutAfiliadoInput[]
+  upsert?: Prisma.UserUpsertWithWhereUniqueWithoutAfiliadoInput | Prisma.UserUpsertWithWhereUniqueWithoutAfiliadoInput[]
+  createMany?: Prisma.UserCreateManyAfiliadoInputEnvelope
+  set?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  disconnect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  delete?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  update?: Prisma.UserUpdateWithWhereUniqueWithoutAfiliadoInput | Prisma.UserUpdateWithWhereUniqueWithoutAfiliadoInput[]
+  updateMany?: Prisma.UserUpdateManyWithWhereWithoutAfiliadoInput | Prisma.UserUpdateManyWithWhereWithoutAfiliadoInput[]
+  deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+}
+
+export type UserUncheckedUpdateManyWithoutAfiliadoNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAfiliadoInput, Prisma.UserUncheckedCreateWithoutAfiliadoInput> | Prisma.UserCreateWithoutAfiliadoInput[] | Prisma.UserUncheckedCreateWithoutAfiliadoInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAfiliadoInput | Prisma.UserCreateOrConnectWithoutAfiliadoInput[]
+  upsert?: Prisma.UserUpsertWithWhereUniqueWithoutAfiliadoInput | Prisma.UserUpsertWithWhereUniqueWithoutAfiliadoInput[]
+  createMany?: Prisma.UserCreateManyAfiliadoInputEnvelope
+  set?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  disconnect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  delete?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  update?: Prisma.UserUpdateWithWhereUniqueWithoutAfiliadoInput | Prisma.UserUpdateWithWhereUniqueWithoutAfiliadoInput[]
+  updateMany?: Prisma.UserUpdateManyWithWhereWithoutAfiliadoInput | Prisma.UserUpdateManyWithWhereWithoutAfiliadoInput[]
+  deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+}
+
+export type UserCreateNestedOneWithoutPagamentosInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPagamentosInput, Prisma.UserUncheckedCreateWithoutPagamentosInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPagamentosInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPagamentosNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPagamentosInput, Prisma.UserUncheckedCreateWithoutPagamentosInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPagamentosInput
+  upsert?: Prisma.UserUpsertWithoutPagamentosInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPagamentosInput, Prisma.UserUpdateWithoutPagamentosInput>, Prisma.UserUncheckedUpdateWithoutPagamentosInput>
 }
 
 export type UserCreateNestedOneWithoutParceirosInput = {
@@ -657,6 +754,8 @@ export type UserCreateWithoutSessionsInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -677,8 +776,10 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -717,6 +818,8 @@ export type UserUpdateWithoutSessionsInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -737,8 +840,213 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
+  parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
+  casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
+  contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
+  movimentos?: Prisma.MovimentoUncheckedUpdateManyWithoutUserNestedInput
+  operacoes?: Prisma.OperacaoUncheckedUpdateManyWithoutUserNestedInput
+  pernas?: Prisma.PernaOperacaoUncheckedUpdateManyWithoutUserNestedInput
+  freebets?: Prisma.FreebetUncheckedUpdateManyWithoutUserNestedInput
+  custos?: Prisma.CustoUncheckedUpdateManyWithoutUserNestedInput
+  chatMensagens?: Prisma.ChatMensagemUncheckedUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserCreateWithoutAfiliadoInput = {
+  id?: string
+  email: string
+  senhaHash: string
+  nome: string
+  role?: string
+  status?: string
+  assinaturaAte?: Date | string | null
+  plano?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
+  parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
+  casas?: Prisma.CasaCreateNestedManyWithoutUserInput
+  contas?: Prisma.ContaCreateNestedManyWithoutUserInput
+  movimentos?: Prisma.MovimentoCreateNestedManyWithoutUserInput
+  operacoes?: Prisma.OperacaoCreateNestedManyWithoutUserInput
+  pernas?: Prisma.PernaOperacaoCreateNestedManyWithoutUserInput
+  freebets?: Prisma.FreebetCreateNestedManyWithoutUserInput
+  custos?: Prisma.CustoCreateNestedManyWithoutUserInput
+  chatMensagens?: Prisma.ChatMensagemCreateNestedManyWithoutAuthorInput
+}
+
+export type UserUncheckedCreateWithoutAfiliadoInput = {
+  id?: string
+  email: string
+  senhaHash: string
+  nome: string
+  role?: string
+  status?: string
+  assinaturaAte?: Date | string | null
+  plano?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
+  parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
+  casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
+  contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
+  movimentos?: Prisma.MovimentoUncheckedCreateNestedManyWithoutUserInput
+  operacoes?: Prisma.OperacaoUncheckedCreateNestedManyWithoutUserInput
+  pernas?: Prisma.PernaOperacaoUncheckedCreateNestedManyWithoutUserInput
+  freebets?: Prisma.FreebetUncheckedCreateNestedManyWithoutUserInput
+  custos?: Prisma.CustoUncheckedCreateNestedManyWithoutUserInput
+  chatMensagens?: Prisma.ChatMensagemUncheckedCreateNestedManyWithoutAuthorInput
+}
+
+export type UserCreateOrConnectWithoutAfiliadoInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAfiliadoInput, Prisma.UserUncheckedCreateWithoutAfiliadoInput>
+}
+
+export type UserCreateManyAfiliadoInputEnvelope = {
+  data: Prisma.UserCreateManyAfiliadoInput | Prisma.UserCreateManyAfiliadoInput[]
+  skipDuplicates?: boolean
+}
+
+export type UserUpsertWithWhereUniqueWithoutAfiliadoInput = {
+  where: Prisma.UserWhereUniqueInput
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAfiliadoInput, Prisma.UserUncheckedUpdateWithoutAfiliadoInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAfiliadoInput, Prisma.UserUncheckedCreateWithoutAfiliadoInput>
+}
+
+export type UserUpdateWithWhereUniqueWithoutAfiliadoInput = {
+  where: Prisma.UserWhereUniqueInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAfiliadoInput, Prisma.UserUncheckedUpdateWithoutAfiliadoInput>
+}
+
+export type UserUpdateManyWithWhereWithoutAfiliadoInput = {
+  where: Prisma.UserScalarWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateManyMutationInput, Prisma.UserUncheckedUpdateManyWithoutAfiliadoInput>
+}
+
+export type UserScalarWhereInput = {
+  AND?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+  OR?: Prisma.UserScalarWhereInput[]
+  NOT?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+  id?: Prisma.StringFilter<"User"> | string
+  email?: Prisma.StringFilter<"User"> | string
+  senhaHash?: Prisma.StringFilter<"User"> | string
+  nome?: Prisma.StringFilter<"User"> | string
+  role?: Prisma.StringFilter<"User"> | string
+  status?: Prisma.StringFilter<"User"> | string
+  assinaturaAte?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  plano?: Prisma.StringNullableFilter<"User"> | string | null
+  afiliadoId?: Prisma.StringNullableFilter<"User"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+}
+
+export type UserCreateWithoutPagamentosInput = {
+  id?: string
+  email: string
+  senhaHash: string
+  nome: string
+  role?: string
+  status?: string
+  assinaturaAte?: Date | string | null
+  plano?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
+  casas?: Prisma.CasaCreateNestedManyWithoutUserInput
+  contas?: Prisma.ContaCreateNestedManyWithoutUserInput
+  movimentos?: Prisma.MovimentoCreateNestedManyWithoutUserInput
+  operacoes?: Prisma.OperacaoCreateNestedManyWithoutUserInput
+  pernas?: Prisma.PernaOperacaoCreateNestedManyWithoutUserInput
+  freebets?: Prisma.FreebetCreateNestedManyWithoutUserInput
+  custos?: Prisma.CustoCreateNestedManyWithoutUserInput
+  chatMensagens?: Prisma.ChatMensagemCreateNestedManyWithoutAuthorInput
+}
+
+export type UserUncheckedCreateWithoutPagamentosInput = {
+  id?: string
+  email: string
+  senhaHash: string
+  nome: string
+  role?: string
+  status?: string
+  assinaturaAte?: Date | string | null
+  plano?: string | null
+  afiliadoId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
+  casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
+  contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
+  movimentos?: Prisma.MovimentoUncheckedCreateNestedManyWithoutUserInput
+  operacoes?: Prisma.OperacaoUncheckedCreateNestedManyWithoutUserInput
+  pernas?: Prisma.PernaOperacaoUncheckedCreateNestedManyWithoutUserInput
+  freebets?: Prisma.FreebetUncheckedCreateNestedManyWithoutUserInput
+  custos?: Prisma.CustoUncheckedCreateNestedManyWithoutUserInput
+  chatMensagens?: Prisma.ChatMensagemUncheckedCreateNestedManyWithoutAuthorInput
+}
+
+export type UserCreateOrConnectWithoutPagamentosInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPagamentosInput, Prisma.UserUncheckedCreateWithoutPagamentosInput>
+}
+
+export type UserUpsertWithoutPagamentosInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPagamentosInput, Prisma.UserUncheckedUpdateWithoutPagamentosInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPagamentosInput, Prisma.UserUncheckedCreateWithoutPagamentosInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPagamentosInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPagamentosInput, Prisma.UserUncheckedUpdateWithoutPagamentosInput>
+}
+
+export type UserUpdateWithoutPagamentosInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  senhaHash?: Prisma.StringFieldUpdateOperationsInput | string
+  nome?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
+  casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
+  contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
+  movimentos?: Prisma.MovimentoUpdateManyWithoutUserNestedInput
+  operacoes?: Prisma.OperacaoUpdateManyWithoutUserNestedInput
+  pernas?: Prisma.PernaOperacaoUpdateManyWithoutUserNestedInput
+  freebets?: Prisma.FreebetUpdateManyWithoutUserNestedInput
+  custos?: Prisma.CustoUpdateManyWithoutUserNestedInput
+  chatMensagens?: Prisma.ChatMensagemUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPagamentosInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  senhaHash?: Prisma.StringFieldUpdateOperationsInput | string
+  nome?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -761,7 +1069,9 @@ export type UserCreateWithoutParceirosInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
   movimentos?: Prisma.MovimentoCreateNestedManyWithoutUserInput
@@ -781,9 +1091,11 @@ export type UserUncheckedCreateWithoutParceirosInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
   movimentos?: Prisma.MovimentoUncheckedCreateNestedManyWithoutUserInput
@@ -821,7 +1133,9 @@ export type UserUpdateWithoutParceirosInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
   movimentos?: Prisma.MovimentoUpdateManyWithoutUserNestedInput
@@ -841,9 +1155,11 @@ export type UserUncheckedUpdateWithoutParceirosInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
   movimentos?: Prisma.MovimentoUncheckedUpdateManyWithoutUserNestedInput
@@ -865,7 +1181,9 @@ export type UserCreateWithoutCasasInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
   movimentos?: Prisma.MovimentoCreateNestedManyWithoutUserInput
@@ -885,9 +1203,11 @@ export type UserUncheckedCreateWithoutCasasInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
   movimentos?: Prisma.MovimentoUncheckedCreateNestedManyWithoutUserInput
@@ -925,7 +1245,9 @@ export type UserUpdateWithoutCasasInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
   movimentos?: Prisma.MovimentoUpdateManyWithoutUserNestedInput
@@ -945,9 +1267,11 @@ export type UserUncheckedUpdateWithoutCasasInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
   movimentos?: Prisma.MovimentoUncheckedUpdateManyWithoutUserNestedInput
@@ -969,7 +1293,9 @@ export type UserCreateWithoutContasInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   movimentos?: Prisma.MovimentoCreateNestedManyWithoutUserInput
@@ -989,9 +1315,11 @@ export type UserUncheckedCreateWithoutContasInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   movimentos?: Prisma.MovimentoUncheckedCreateNestedManyWithoutUserInput
@@ -1029,7 +1357,9 @@ export type UserUpdateWithoutContasInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   movimentos?: Prisma.MovimentoUpdateManyWithoutUserNestedInput
@@ -1049,9 +1379,11 @@ export type UserUncheckedUpdateWithoutContasInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   movimentos?: Prisma.MovimentoUncheckedUpdateManyWithoutUserNestedInput
@@ -1073,7 +1405,9 @@ export type UserCreateWithoutMovimentosInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -1093,9 +1427,11 @@ export type UserUncheckedCreateWithoutMovimentosInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -1133,7 +1469,9 @@ export type UserUpdateWithoutMovimentosInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -1153,9 +1491,11 @@ export type UserUncheckedUpdateWithoutMovimentosInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -1177,7 +1517,9 @@ export type UserCreateWithoutOperacoesInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -1197,9 +1539,11 @@ export type UserUncheckedCreateWithoutOperacoesInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -1237,7 +1581,9 @@ export type UserUpdateWithoutOperacoesInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -1257,9 +1603,11 @@ export type UserUncheckedUpdateWithoutOperacoesInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -1281,7 +1629,9 @@ export type UserCreateWithoutPernasInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -1301,9 +1651,11 @@ export type UserUncheckedCreateWithoutPernasInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -1341,7 +1693,9 @@ export type UserUpdateWithoutPernasInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -1361,9 +1715,11 @@ export type UserUncheckedUpdateWithoutPernasInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -1385,7 +1741,9 @@ export type UserCreateWithoutFreebetsInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -1405,9 +1763,11 @@ export type UserUncheckedCreateWithoutFreebetsInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -1445,7 +1805,9 @@ export type UserUpdateWithoutFreebetsInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -1465,9 +1827,11 @@ export type UserUncheckedUpdateWithoutFreebetsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -1489,7 +1853,9 @@ export type UserCreateWithoutCustosInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -1509,9 +1875,11 @@ export type UserUncheckedCreateWithoutCustosInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -1549,7 +1917,9 @@ export type UserUpdateWithoutCustosInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -1569,9 +1939,11 @@ export type UserUncheckedUpdateWithoutCustosInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -1593,7 +1965,9 @@ export type UserCreateWithoutChatMensagensInput = {
   plano?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -1613,9 +1987,11 @@ export type UserUncheckedCreateWithoutChatMensagensInput = {
   status?: string
   assinaturaAte?: Date | string | null
   plano?: string | null
+  afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -1653,7 +2029,9 @@ export type UserUpdateWithoutChatMensagensInput = {
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -1673,9 +2051,11 @@ export type UserUncheckedUpdateWithoutChatMensagensInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -1686,6 +2066,80 @@ export type UserUncheckedUpdateWithoutChatMensagensInput = {
   custos?: Prisma.CustoUncheckedUpdateManyWithoutUserNestedInput
 }
 
+export type UserCreateManyAfiliadoInput = {
+  id?: string
+  email: string
+  senhaHash: string
+  nome: string
+  role?: string
+  status?: string
+  assinaturaAte?: Date | string | null
+  plano?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type UserUpdateWithoutAfiliadoInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  senhaHash?: Prisma.StringFieldUpdateOperationsInput | string
+  nome?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
+  parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
+  casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
+  contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
+  movimentos?: Prisma.MovimentoUpdateManyWithoutUserNestedInput
+  operacoes?: Prisma.OperacaoUpdateManyWithoutUserNestedInput
+  pernas?: Prisma.PernaOperacaoUpdateManyWithoutUserNestedInput
+  freebets?: Prisma.FreebetUpdateManyWithoutUserNestedInput
+  custos?: Prisma.CustoUpdateManyWithoutUserNestedInput
+  chatMensagens?: Prisma.ChatMensagemUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAfiliadoInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  senhaHash?: Prisma.StringFieldUpdateOperationsInput | string
+  nome?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
+  parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
+  casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
+  contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
+  movimentos?: Prisma.MovimentoUncheckedUpdateManyWithoutUserNestedInput
+  operacoes?: Prisma.OperacaoUncheckedUpdateManyWithoutUserNestedInput
+  pernas?: Prisma.PernaOperacaoUncheckedUpdateManyWithoutUserNestedInput
+  freebets?: Prisma.FreebetUncheckedUpdateManyWithoutUserNestedInput
+  custos?: Prisma.CustoUncheckedUpdateManyWithoutUserNestedInput
+  chatMensagens?: Prisma.ChatMensagemUncheckedUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateManyWithoutAfiliadoInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  senhaHash?: Prisma.StringFieldUpdateOperationsInput | string
+  nome?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 
 /**
  * Count Type UserCountOutputType
@@ -1693,6 +2147,7 @@ export type UserUncheckedUpdateWithoutChatMensagensInput = {
 
 export type UserCountOutputType = {
   sessions: number
+  pagamentos: number
   parceiros: number
   casas: number
   contas: number
@@ -1706,6 +2161,7 @@ export type UserCountOutputType = {
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | UserCountOutputTypeCountSessionsArgs
+  pagamentos?: boolean | UserCountOutputTypeCountPagamentosArgs
   parceiros?: boolean | UserCountOutputTypeCountParceirosArgs
   casas?: boolean | UserCountOutputTypeCountCasasArgs
   contas?: boolean | UserCountOutputTypeCountContasArgs
@@ -1732,6 +2188,13 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
  */
 export type UserCountOutputTypeCountSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.SessionWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPagamentosArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PagamentoWhereInput
 }
 
 /**
@@ -1807,9 +2270,12 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   status?: boolean
   assinaturaAte?: boolean
   plano?: boolean
+  afiliadoId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  afiliado?: boolean | Prisma.User$afiliadoArgs<ExtArgs>
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
+  pagamentos?: boolean | Prisma.User$pagamentosArgs<ExtArgs>
   parceiros?: boolean | Prisma.User$parceirosArgs<ExtArgs>
   casas?: boolean | Prisma.User$casasArgs<ExtArgs>
   contas?: boolean | Prisma.User$contasArgs<ExtArgs>
@@ -1831,8 +2297,10 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   status?: boolean
   assinaturaAte?: boolean
   plano?: boolean
+  afiliadoId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  afiliado?: boolean | Prisma.User$afiliadoArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1844,8 +2312,10 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   status?: boolean
   assinaturaAte?: boolean
   plano?: boolean
+  afiliadoId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  afiliado?: boolean | Prisma.User$afiliadoArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -1857,13 +2327,16 @@ export type UserSelectScalar = {
   status?: boolean
   assinaturaAte?: boolean
   plano?: boolean
+  afiliadoId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "senhaHash" | "nome" | "role" | "status" | "assinaturaAte" | "plano" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "senhaHash" | "nome" | "role" | "status" | "assinaturaAte" | "plano" | "afiliadoId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  afiliado?: boolean | Prisma.User$afiliadoArgs<ExtArgs>
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
+  pagamentos?: boolean | Prisma.User$pagamentosArgs<ExtArgs>
   parceiros?: boolean | Prisma.User$parceirosArgs<ExtArgs>
   casas?: boolean | Prisma.User$casasArgs<ExtArgs>
   contas?: boolean | Prisma.User$contasArgs<ExtArgs>
@@ -1875,13 +2348,19 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   chatMensagens?: boolean | Prisma.User$chatMensagensArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
-export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
-export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  afiliado?: boolean | Prisma.User$afiliadoArgs<ExtArgs>
+}
+export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  afiliado?: boolean | Prisma.User$afiliadoArgs<ExtArgs>
+}
 
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
   objects: {
+    afiliado: Prisma.$AfiliadoPayload<ExtArgs> | null
     sessions: Prisma.$SessionPayload<ExtArgs>[]
+    pagamentos: Prisma.$PagamentoPayload<ExtArgs>[]
     parceiros: Prisma.$ParceiroPayload<ExtArgs>[]
     casas: Prisma.$CasaPayload<ExtArgs>[]
     contas: Prisma.$ContaPayload<ExtArgs>[]
@@ -1901,6 +2380,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     status: string
     assinaturaAte: Date | null
     plano: string | null
+    afiliadoId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -2297,7 +2777,9 @@ readonly fields: UserFieldRefs;
  */
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  afiliado<T extends Prisma.User$afiliadoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$afiliadoArgs<ExtArgs>>): Prisma.Prisma__AfiliadoClient<runtime.Types.Result.GetResult<Prisma.$AfiliadoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   sessions<T extends Prisma.User$sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  pagamentos<T extends Prisma.User$pagamentosArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pagamentosArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   parceiros<T extends Prisma.User$parceirosArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$parceirosArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ParceiroPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   casas<T extends Prisma.User$casasArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$casasArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CasaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   contas<T extends Prisma.User$contasArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$contasArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ContaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2344,6 +2826,7 @@ export interface UserFieldRefs {
   readonly status: Prisma.FieldRef<"User", 'String'>
   readonly assinaturaAte: Prisma.FieldRef<"User", 'DateTime'>
   readonly plano: Prisma.FieldRef<"User", 'String'>
+  readonly afiliadoId: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }
@@ -2600,6 +3083,10 @@ export type UserCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    */
   data: Prisma.UserCreateManyInput | Prisma.UserCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -2670,6 +3157,10 @@ export type UserUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    * Limit how many Users to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -2739,6 +3230,25 @@ export type UserDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
 }
 
 /**
+ * User.afiliado
+ */
+export type User$afiliadoArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Afiliado
+   */
+  select?: Prisma.AfiliadoSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Afiliado
+   */
+  omit?: Prisma.AfiliadoOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AfiliadoInclude<ExtArgs> | null
+  where?: Prisma.AfiliadoWhereInput
+}
+
+/**
  * User.sessions
  */
 export type User$sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2760,6 +3270,30 @@ export type User$sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.SessionScalarFieldEnum | Prisma.SessionScalarFieldEnum[]
+}
+
+/**
+ * User.pagamentos
+ */
+export type User$pagamentosArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Pagamento
+   */
+  select?: Prisma.PagamentoSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Pagamento
+   */
+  omit?: Prisma.PagamentoOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PagamentoInclude<ExtArgs> | null
+  where?: Prisma.PagamentoWhereInput
+  orderBy?: Prisma.PagamentoOrderByWithRelationInput | Prisma.PagamentoOrderByWithRelationInput[]
+  cursor?: Prisma.PagamentoWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PagamentoScalarFieldEnum | Prisma.PagamentoScalarFieldEnum[]
 }
 
 /**

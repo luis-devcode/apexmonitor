@@ -517,18 +517,6 @@ export type ParceiroUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.ParceiroScalarWhereInput | Prisma.ParceiroScalarWhereInput[]
 }
 
-export type FloatFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type ParceiroCreateNestedOneWithoutContasInput = {
   create?: Prisma.XOR<Prisma.ParceiroCreateWithoutContasInput, Prisma.ParceiroUncheckedCreateWithoutContasInput>
   connectOrCreate?: Prisma.ParceiroCreateOrConnectWithoutContasInput
