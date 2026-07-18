@@ -446,7 +446,13 @@ export default function SurebetCalculator({ seed, selection, className = "", var
               <p className="mono-label text-muted">Investimento total</p>
               <div className="flex items-center gap-1">
                 <span className="text-sm text-muted">R$</span>
-                <input type="number" value={anyFixed ? risk.toFixed(2) : total} onChange={(e) => changeTotal(e.target.value)} readOnly={anyFixed} className={`w-full bg-transparent text-lg font-black tabular-nums outline-none ${anyFixed ? "text-text-2" : ""}`} />
+                <LiveNumberInput
+                  value={risk.toFixed(2)}
+                  onChange={changeTotal}
+                  readOnly={anyFixed}
+                  title="Soma real dos valores arriscados nesta operação"
+                  className={`w-full bg-transparent text-lg font-black tabular-nums outline-none ${anyFixed ? "text-text-2" : ""}`}
+                />
               </div>
             </div>
             <div className="shrink-0 text-right">
@@ -567,7 +573,15 @@ export default function SurebetCalculator({ seed, selection, className = "", var
           <tfoot className="bg-accent/[0.07]">
             <tr>
               <td colSpan={cols} className="rounded-bl-xl border-b border-l border-accent/20 px-4 py-5 text-right text-sm font-black uppercase tracking-wide text-accent">Investimento total</td>
-              <td className="border-b border-accent/20 px-3 py-4"><input type="number" value={anyFixed ? risk.toFixed(2) : total} onChange={(e) => changeTotal(e.target.value)} readOnly={anyFixed} className={`${inputCls} border-accent/20 bg-surface font-black ${anyFixed ? "opacity-70" : ""}`} /></td>
+              <td className="border-b border-accent/20 px-3 py-4">
+                <LiveNumberInput
+                  value={risk.toFixed(2)}
+                  onChange={changeTotal}
+                  readOnly={anyFixed}
+                  title="Soma real dos valores arriscados nesta operação"
+                  className={`${inputCls} border-accent/20 bg-surface font-black ${anyFixed ? "opacity-70" : ""}`}
+                />
+              </td>
               <td className={`border-b border-accent/20 px-3 py-4 text-lg font-black tabular-nums ${roi > 0.01 ? "text-positive" : roi < -0.01 ? "text-negative" : "text-text-2"}`}>{roi.toFixed(2)}%</td>
               <td className="border-b border-accent/20 px-3 py-4" />
               <td className="border-b border-accent/20 px-3 py-4" />
@@ -696,12 +710,14 @@ function LiveNumberInput({
   className,
   title,
   step = "0.01",
+  readOnly = false,
 }: {
   value: string;
   onChange: (raw: string) => void;
   className?: string;
   title?: string;
   step?: string;
+  readOnly?: boolean;
 }) {
   const [text, setText] = useState(value);
   const [focused, setFocused] = useState(false);
@@ -710,6 +726,7 @@ function LiveNumberInput({
     <input
       type="number"
       step={step}
+      readOnly={readOnly}
       value={focused ? text : value}
       onFocus={(e) => { setFocused(true); setText(value); e.target.select(); }}
       onBlur={() => setFocused(false)}
