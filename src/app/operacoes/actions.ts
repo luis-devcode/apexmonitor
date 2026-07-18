@@ -185,6 +185,119 @@ export async function criarOperacaoAction(
   return undefined;
 }
 
+/**
+ * Edita uma operação EM ABERTO. Reaproveita o mesmo formulário da criação, mas
+ * os campos avançados (lay/freebet/comissão/aumento/conta) não estão no form
+ * manual — carregamos os da perna original POR POSIÇÃO para não perdê-los.
+ * Pernas novas (além das originais) entram como back simples.
+ */
+export async function editarOperacaoAction(
+  _previous: string | undefined,
+  formData: FormData,
+): Promise<string | undefined> {
+  const userId = await requireUserId();
+  const operacaoId = String(formData.get("operacaoId") ?? "").trim();
+  if (!operacaoId) return "Operação não encontrada.";
+
+  const existente = await prisma.operacao.findFirst({
+    where: { id: operacaoId, userId },
+    include: { pernas: { orderBy: { createdAt: "asc" } } },
+  });
+  if (!existente) return "Operação não encontrada.";
+  // Fechada já mexeu na banca; editar aqui daria número inconsistente. Reabra antes.
+  if (existente.status !== "PENDENTE") return "Só dá para editar operação em aberto. Reabra antes de editar.";
+
+  const evento = String(formData.get("evento") ?? "").trim();
+  const esporte = String(formData.get("esporte") ?? "").trim() || null;
+  const notas = String(formData.get("notas") ?? "").trim() || null;
+  const dateRaw = String(formData.get("data") ?? "").trim();
+  const data = dateRaw ? new Date(dateRaw) : existente.data;
+  const rawLegs = parseJson<RawLeg[]>(formData.get("pernas"));
+
+  const procedimentoRaw = String(formData.get("procedimento") ?? "").trim();
+  const procedimento = isProcedimento(procedimentoRaw) ? procedimentoRaw : existente.procedimento;
+  const tipoRaw = String(formData.get("tipo") ?? "OUTRO");
+  const tipo = procedimento ? tipoDoProcedimento(procedimento) : OPERATION_TYPES.has(tipoRaw) ? tipoRaw : existente.tipo;
+  const somarRetornos = String(formData.get("somarRetornos") ?? "") === "1";
+
+  if (!evento) return "Informe o evento da operação.";
+  if (Number.isNaN(data.getTime())) return "Data do evento inválida.";
+  if (!Array.isArray(rawLegs) || rawLegs.length < 1) return "Adicione pelo menos uma aposta.";
+
+  const antigas = existente.pernas;
+  const legs = rawLegs.map((leg, index) => {
+    const base = antigas[index]; // carrega os atributos avançados por posição
+    const odd = localizedNumber(leg.odd);
+    const stake = round(localizedNumber(leg.stake));
+    // Cassino: o retorno digitado é o valor REAL recebido (manual). Aposta: o
+    // form manda só stake×odd automático, então recalculamos (senão o lay/freebet
+    // carregado por posição sairia com retorno errado).
+    const temRetornoForm = leg.retorno !== undefined && leg.retorno !== null && String(leg.retorno).trim() !== "";
+    const retornoManual = somarRetornos && temRetornoForm ? round(localizedNumber(leg.retorno)) : null;
+    const isLay = base?.isLay ?? false;
+    const freebet = base?.freebet ?? false;
+    const comissaoPct = base?.comissaoPct ?? 0;
+    const aumentoPct = base?.aumentoPct ?? 0;
+    return {
+      casa: String(leg.casa ?? "").trim() || null,
+      selecao: String(leg.selecao ?? "").trim() || "—",
+      odd, stake, isLay, freebet, comissaoPct, aumentoPct,
+      contaId: base?.contaId ?? null,
+      risco: round(riscoDaPerna(stake, odd, isLay, freebet)),
+      retorno: retornoManual ?? retornoDaPerna({ stake, odd, isLay, freebet, comissaoPct, aumentoPct }),
+      retornoManual,
+    };
+  });
+
+  if (legs.some((leg) => !Number.isFinite(leg.odd) || leg.odd <= 1 || !Number.isFinite(leg.stake) || leg.stake < 0)) {
+    return "Revise a odd e o valor de todas as apostas.";
+  }
+  if (legs.some((leg) => leg.retornoManual !== null && (!Number.isFinite(leg.retornoManual) || leg.retornoManual < 0))) {
+    return "Revise o retorno informado.";
+  }
+
+  const stakeTotal = round(legs.reduce((sum, leg) => sum + leg.risco, 0));
+  const retornoEsperado = somarRetornos && legs.every((leg) => leg.retornoManual !== null)
+    ? legs.reduce((sum, leg) => sum + leg.retorno, 0)
+    : Math.min(...legs.map((leg) => leg.retorno));
+  const lucroEsperado = round(retornoEsperado - stakeTotal);
+  const casas = [...new Set(legs.map((leg) => leg.casa).filter((c): c is string => !!c))].join(", ") || null;
+
+  const contaIds = legs.map((l) => l.contaId).filter((id): id is string => !!id);
+  const contasValidas = new Set(
+    (await prisma.conta.findMany({ where: { userId, id: { in: contaIds } }, select: { id: true } })).map((c) => c.id),
+  );
+
+  await prisma.$transaction(async (tx) => {
+    await tx.operacao.update({
+      where: { id: operacaoId },
+      data: { tipo, procedimento, evento, esporte, data, stakeTotal, lucroEsperado, casas, notas },
+    });
+    // Substitui as pernas: apaga as antigas e recria com os valores editados.
+    await tx.pernaOperacao.deleteMany({ where: { operacaoId, userId } });
+    await tx.pernaOperacao.createMany({
+      data: legs.map((leg) => ({
+        userId,
+        operacaoId,
+        casa: leg.casa,
+        contaId: leg.contaId && contasValidas.has(leg.contaId) ? leg.contaId : null,
+        selecao: leg.selecao,
+        odd: leg.odd,
+        stake: leg.stake,
+        isLay: leg.isLay,
+        freebet: leg.freebet,
+        comissaoPct: leg.comissaoPct,
+        aumentoPct: leg.aumentoPct,
+        risco: leg.risco,
+        retorno: leg.retornoManual,
+      })),
+    });
+  });
+
+  revalidatePath("/operacoes");
+  return undefined;
+}
+
 /** Atribui (ou remove) a conta/CPF de uma perna. Metadado de organização. */
 export async function setPernaContaAction(pernaId: string, contaId: string | null): Promise<void> {
   const userId = await requireUserId();

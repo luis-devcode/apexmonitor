@@ -14,6 +14,7 @@ import { PROCEDIMENTOS, procedimentoLabel } from "@/lib/procedimentos";
 import {
   criarOperacaoAction,
   deleteOperacaoAction,
+  editarOperacaoAction,
   finalizarOperacaoAction,
   reabrirOperacaoAction,
   setPernaContaAction,
@@ -62,6 +63,8 @@ type FilterOption = { value: string; label: string };
 type ManualLeg = { casa: string; selecao: string; odd: string; stake: string; retorno?: string };
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+// Número → string de input pt-BR (ex.: 20 → "20,00"). Usado ao pré-preencher a edição.
+const numInput = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const moneyInputValue = (raw: string) => {
   const clean = raw.trim().replace(/R\$|\s/g, "");
   if (!clean) return 0;
@@ -349,7 +352,7 @@ export default function PlanilhaWorkspace({ operacoes, contas, freebets, casas, 
               </div>
             </div>
           ) : (
-            shown.map((o) => <OperacaoCard key={o.id} operacao={o} numero={numeros.get(o.id) ?? 0} contas={contas} freebets={freebets} casas={casas} />)
+            shown.map((o) => <OperacaoCard key={o.id} operacao={o} numero={numeros.get(o.id) ?? 0} contas={contas} freebets={freebets} casas={casas} eventos={eventos} />)
           )}
         </div>
         <PlanilhaCalendar operacoes={semData} selected={diaSelecionado} onSelect={verDia} />
@@ -360,8 +363,9 @@ export default function PlanilhaWorkspace({ operacoes, contas, freebets, casas, 
   );
 }
 
-function OperacaoCard({ operacao, numero, contas, freebets, casas }: { operacao: Operacao; numero: number; contas: ContaOption[]; freebets: FreebetOption[]; casas: CasaOption[] }) {
+function OperacaoCard({ operacao, numero, contas, freebets, casas, eventos }: { operacao: Operacao; numero: number; contas: ContaOption[]; freebets: FreebetOption[]; casas: CasaOption[]; eventos: EventOption[] }) {
   const [finalizando, setFinalizando] = useState(false);
+  const [editando, setEditando] = useState(false);
   const finalizada = operacao.status === "FINALIZADA";
   const lucro = finalizada ? operacao.lucroReal ?? 0 : operacao.lucroEsperado;
   const roi = operacao.stakeTotal > 0 ? (lucro / operacao.stakeTotal) * 100 : 0;
@@ -516,13 +520,42 @@ function OperacaoCard({ operacao, numero, contas, freebets, casas }: { operacao:
           {finalizada ? (
             <ReabrirBtn id={operacao.id} />
           ) : (
-            <button onClick={() => setFinalizando(true)} className="rounded-lg bg-accent px-3 py-1.5 text-xs font-black text-accent-ink hover:bg-accent-hover">Finalizar</button>
+            <>
+              <button onClick={() => setEditando(true)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-text-2 transition hover:border-accent/40 hover:text-accent">Editar</button>
+              <button onClick={() => setFinalizando(true)} className="rounded-lg bg-accent px-3 py-1.5 text-xs font-black text-accent-ink hover:bg-accent-hover">Finalizar</button>
+            </>
           )}
           <DeleteBtn id={operacao.id} />
         </div>
       </div>
 
       {finalizando && <FinalizarModal operacao={operacao} numero={numero} casas={casas} onClose={() => setFinalizando(false)} />}
+      {editando && (
+        <ManualEntryModal
+          preset="aposta"
+          contas={contas}
+          casas={casas}
+          eventos={eventos}
+          onClose={() => setEditando(false)}
+          editar={{
+            id: operacao.id,
+            evento: operacao.evento,
+            esporte: operacao.esporte ?? "Futebol",
+            data: datetimeLocalFromIso(operacao.data),
+            procedimento: operacao.procedimento ?? "APOSTA_SIMPLES",
+            notas: operacao.notas ?? "",
+            cassino: operacao.esporte === "Cassino",
+            legs: operacao.pernas.map((p) => ({
+              casa: p.casa ?? "",
+              selecao: p.selecao,
+              odd: numInput(p.odd),
+              stake: numInput(p.stake),
+              // retorno só quando foi manual (cassino); aposta recalcula sozinha.
+              ...(operacao.esporte === "Cassino" && p.retorno != null ? { retorno: numInput(p.retorno) } : {}),
+            })),
+          }}
+        />
+      )}
     </article>
   );
 }
@@ -669,7 +702,9 @@ function ContaAssign({ pernaId, casa, contaId, contas }: { pernaId: string; casa
   );
 }
 
-function ManualEntryModal({ preset: presetInicial, contas, casas, eventos, onClose }: { preset: TipoRegistro | "escolher"; contas: ContaOption[]; casas: CasaOption[]; eventos: EventOption[]; onClose: () => void }) {
+type EditarData = { id: string; evento: string; esporte: string; data: string; procedimento: string; notas: string; cassino: boolean; legs: ManualLeg[] };
+
+function ManualEntryModal({ preset: presetInicial, contas, casas, eventos, onClose, editar }: { preset: TipoRegistro | "escolher"; contas: ContaOption[]; casas: CasaOption[]; eventos: EventOption[]; onClose: () => void; editar?: EditarData }) {
   // A casa da entrada não depende de já existir uma conta/saldo nela. A lista
   // principal vem do mesmo diretório usado pela calculadora; casas presentes
   // apenas nas contas do usuário entram como fallback.
@@ -681,19 +716,23 @@ function ManualEntryModal({ preset: presetInicial, contas, casas, eventos, onClo
     }
     return [...porNome.values()].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   }, [casas, contas]);
-  const [preset, setPreset] = useState<TipoRegistro | null>(presetInicial === "escolher" ? null : presetInicial);
-  const [legs, setLegs] = useState<ManualLeg[]>([
-    { casa: "", selecao: "", odd: "2,00", stake: "100,00" },
-  ]);
-  const [evento, setEvento] = useState("");
-  const [data, setData] = useState(dataInputValue);
-  const [esporte, setEsporte] = useState("Futebol");
-  const [procedimento, setProcedimento] = useState("APOSTA_SIMPLES");
+  const [preset, setPreset] = useState<TipoRegistro | null>(
+    editar ? (editar.cassino ? "cassino" : "aposta") : presetInicial === "escolher" ? null : presetInicial,
+  );
+  const [legs, setLegs] = useState<ManualLeg[]>(
+    editar ? editar.legs : [{ casa: "", selecao: "", odd: "2,00", stake: "100,00" }],
+  );
+  const [evento, setEvento] = useState(editar?.evento ?? "");
+  const [data, setData] = useState(editar?.data ?? dataInputValue);
+  const [esporte, setEsporte] = useState(editar?.esporte ?? "Futebol");
+  const [procedimento, setProcedimento] = useState(editar?.procedimento ?? "APOSTA_SIMPLES");
   const [error, action, pending] = useActionState(
     async (_prev: string | undefined, formData: FormData) => {
       const entradas = JSON.parse(String(formData.get("pernas") ?? "[]")) as ManualLeg[];
       if (preset === "aposta" && entradas.some((entrada) => !entrada.casa)) return "Selecione a casa de aposta de todas as entradas.";
-      const result = await criarOperacaoAction(undefined, formData);
+      const result = editar
+        ? await editarOperacaoAction(undefined, formData)
+        : await criarOperacaoAction(undefined, formData);
       if (!result) onClose();
       return result;
     },
@@ -757,9 +796,9 @@ function ManualEntryModal({ preset: presetInicial, contas, casas, eventos, onClo
 
   return (
     <AppModal
-      title={preset ? tipoAtual?.label ?? "Nova operação" : "Como deseja registrar?"}
-      subtitle={preset ? "Revise os dados da operação antes de salvar na planilha." : "Escolha somente o tipo de lançamento. O formulário será adaptado para você."}
-      eyebrow="Nova operação"
+      title={editar ? (tipoAtual?.label ?? "Editar operação") : preset ? tipoAtual?.label ?? "Nova operação" : "Como deseja registrar?"}
+      subtitle={editar ? "Ajuste os dados e salve. O cálculo é refeito automaticamente." : preset ? "Revise os dados da operação antes de salvar na planilha." : "Escolha somente o tipo de lançamento. O formulário será adaptado para você."}
+      eyebrow={editar ? "Editar operação" : "Nova operação"}
       onClose={onClose}
       size={preset ? "xl" : "lg"}
     >
@@ -825,9 +864,10 @@ function ManualEntryModal({ preset: presetInicial, contas, casas, eventos, onClo
       <div>
         <div className="flex items-center justify-between gap-3 border-b border-border bg-surface-2/30 px-4 py-3 sm:px-5">
           <span className="flex items-center gap-2 text-xs font-bold text-text-2"><span className="grid h-6 w-6 place-items-center rounded-lg bg-accent/12 font-mono text-[9px] font-black text-accent">2</span> Preencha os dados</span>
-          <button type="button" onClick={() => setPreset(null)} className="rounded-lg border border-border px-2.5 py-1.5 text-[10px] font-bold text-muted transition hover:border-border-strong hover:text-text">Trocar tipo</button>
+          {!editar && <button type="button" onClick={() => setPreset(null)} className="rounded-lg border border-border px-2.5 py-1.5 text-[10px] font-bold text-muted transition hover:border-border-strong hover:text-text">Trocar tipo</button>}
         </div>
         <form action={action} className="space-y-4 p-4 sm:p-5">
+          {editar && <input type="hidden" name="operacaoId" value={editar.id} />}
           <input type="hidden" name="pernas" value={JSON.stringify(pernasPayload)} />
           <input type="hidden" name="tipo" value={preset === "cassino" ? "OUTRO" : "SUREBET"} />
           <input type="hidden" name="somarRetornos" value={preset === "cassino" ? "1" : "0"} />
@@ -854,7 +894,7 @@ function ManualEntryModal({ preset: presetInicial, contas, casas, eventos, onClo
             </label> : null}
             <label className="space-y-1 text-xs font-bold text-text-2">
               Observação
-              <input name="notas" placeholder="Opcional" className="h-10 w-full rounded-lg border border-border bg-surface-2 px-3 text-sm font-semibold outline-none focus:border-accent" />
+              <input name="notas" defaultValue={editar?.notas ?? ""} placeholder="Opcional" className="h-10 w-full rounded-lg border border-border bg-surface-2 px-3 text-sm font-semibold outline-none focus:border-accent" />
             </label>
           </div>
 
@@ -977,7 +1017,7 @@ function ManualEntryModal({ preset: presetInicial, contas, casas, eventos, onClo
           {error && <p className="rounded-lg bg-negative/10 px-3 py-2 text-xs text-negative">{error}</p>}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={onClose} className="h-9 rounded-lg px-4 text-xs font-bold text-muted hover:text-text">Cancelar</button>
-            <button type="submit" disabled={pending} className="h-9 rounded-lg bg-accent px-4 text-xs font-black text-accent-ink hover:bg-accent-hover disabled:opacity-50">{pending ? "Salvando..." : "Salvar na planilha"}</button>
+            <button type="submit" disabled={pending} className="h-9 rounded-lg bg-accent px-4 text-xs font-black text-accent-ink hover:bg-accent-hover disabled:opacity-50">{pending ? "Salvando..." : editar ? "Salvar alterações" : "Salvar na planilha"}</button>
           </div>
         </form>
       </div>
