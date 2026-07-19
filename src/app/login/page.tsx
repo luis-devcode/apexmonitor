@@ -4,10 +4,12 @@ import LoginForm from "./LoginForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ redefinida?: string }> }) {
   const user = await getCurrentUser();
   if (user) redirect("/");
 
+  const { redefinida } = await searchParams;
   const primeiroAcesso = await semUsuarios();
-  return <LoginForm primeiroAcesso={primeiroAcesso} />;
+  const aviso = redefinida ? "Senha redefinida! Entre com sua nova senha." : undefined;
+  return <LoginForm primeiroAcesso={primeiroAcesso} aviso={aviso} />;
 }

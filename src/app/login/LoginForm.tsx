@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { BrandMark } from "@/components/Brand";
 import { criarAdminAction, loginAction } from "./actions";
@@ -19,7 +20,7 @@ function EyeToggle({ show, onToggle }: { show: boolean; onToggle: () => void }) 
   );
 }
 
-export default function LoginForm({ primeiroAcesso }: { primeiroAcesso: boolean }) {
+export default function LoginForm({ primeiroAcesso, aviso }: { primeiroAcesso: boolean; aviso?: string }) {
   const [show, setShow] = useState(false);
   const [error, action, pending] = useActionState(
     primeiroAcesso ? criarAdminAction : loginAction,
@@ -49,6 +50,11 @@ export default function LoginForm({ primeiroAcesso }: { primeiroAcesso: boolean 
 
         {/* Cartão */}
         <div className="panel rounded-2xl border border-border bg-surface p-6">
+          {aviso && (
+            <div className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3.5 py-3">
+              <p className="text-sm font-semibold text-emerald-400">{aviso}</p>
+            </div>
+          )}
           {primeiroAcesso && (
             <div className="mb-4 rounded-xl border border-accent/25 bg-accent/[0.07] px-3.5 py-3">
               <p className="text-sm font-bold text-accent">Primeiro acesso</p>
@@ -120,7 +126,9 @@ export default function LoginForm({ primeiroAcesso }: { primeiroAcesso: boolean 
               <p className="text-xs text-muted">
                 Não tem conta? <span className="font-bold text-accent">Fale conosco</span>
               </p>
-              <p className="text-xs text-muted">Esqueceu a senha? Fale com o suporte.</p>
+              <p className="text-xs text-muted">
+                Esqueceu a senha? <Link href="/esqueci-senha" className="font-bold text-accent transition hover:brightness-110">Redefinir</Link>
+              </p>
             </div>
           )}
         </div>

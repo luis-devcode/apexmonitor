@@ -232,6 +232,7 @@ export type UserWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   afiliado?: Prisma.XOR<Prisma.AfiliadoNullableScalarRelationFilter, Prisma.AfiliadoWhereInput> | null
   sessions?: Prisma.SessionListRelationFilter
+  passwordResets?: Prisma.PasswordResetListRelationFilter
   pagamentos?: Prisma.PagamentoListRelationFilter
   parceiros?: Prisma.ParceiroListRelationFilter
   casas?: Prisma.CasaListRelationFilter
@@ -258,6 +259,7 @@ export type UserOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   afiliado?: Prisma.AfiliadoOrderByWithRelationInput
   sessions?: Prisma.SessionOrderByRelationAggregateInput
+  passwordResets?: Prisma.PasswordResetOrderByRelationAggregateInput
   pagamentos?: Prisma.PagamentoOrderByRelationAggregateInput
   parceiros?: Prisma.ParceiroOrderByRelationAggregateInput
   casas?: Prisma.CasaOrderByRelationAggregateInput
@@ -287,6 +289,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   afiliado?: Prisma.XOR<Prisma.AfiliadoNullableScalarRelationFilter, Prisma.AfiliadoWhereInput> | null
   sessions?: Prisma.SessionListRelationFilter
+  passwordResets?: Prisma.PasswordResetListRelationFilter
   pagamentos?: Prisma.PagamentoListRelationFilter
   parceiros?: Prisma.ParceiroListRelationFilter
   casas?: Prisma.CasaListRelationFilter
@@ -346,6 +349,7 @@ export type UserCreateInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
@@ -371,6 +375,7 @@ export type UserUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
@@ -396,6 +401,7 @@ export type UserUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
@@ -421,6 +427,7 @@ export type UserUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
@@ -559,6 +566,20 @@ export type UserUpdateOneRequiredWithoutSessionsNestedInput = {
   upsert?: Prisma.UserUpsertWithoutSessionsInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSessionsInput, Prisma.UserUpdateWithoutSessionsInput>, Prisma.UserUncheckedUpdateWithoutSessionsInput>
+}
+
+export type UserCreateNestedOneWithoutPasswordResetsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPasswordResetsInput, Prisma.UserUncheckedCreateWithoutPasswordResetsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPasswordResetsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPasswordResetsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPasswordResetsInput, Prisma.UserUncheckedCreateWithoutPasswordResetsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPasswordResetsInput
+  upsert?: Prisma.UserUpsertWithoutPasswordResetsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPasswordResetsInput, Prisma.UserUpdateWithoutPasswordResetsInput>, Prisma.UserUncheckedUpdateWithoutPasswordResetsInput>
 }
 
 export type UserCreateNestedManyWithoutAfiliadoInput = {
@@ -755,6 +776,7 @@ export type UserCreateWithoutSessionsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
@@ -779,6 +801,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   afiliadoId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
@@ -819,6 +842,7 @@ export type UserUpdateWithoutSessionsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
@@ -843,6 +867,123 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
+  parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
+  casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
+  contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
+  movimentos?: Prisma.MovimentoUncheckedUpdateManyWithoutUserNestedInput
+  operacoes?: Prisma.OperacaoUncheckedUpdateManyWithoutUserNestedInput
+  pernas?: Prisma.PernaOperacaoUncheckedUpdateManyWithoutUserNestedInput
+  freebets?: Prisma.FreebetUncheckedUpdateManyWithoutUserNestedInput
+  custos?: Prisma.CustoUncheckedUpdateManyWithoutUserNestedInput
+  chatMensagens?: Prisma.ChatMensagemUncheckedUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserCreateWithoutPasswordResetsInput = {
+  id?: string
+  email: string
+  senhaHash: string
+  nome: string
+  role?: string
+  status?: string
+  assinaturaAte?: Date | string | null
+  plano?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
+  parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
+  casas?: Prisma.CasaCreateNestedManyWithoutUserInput
+  contas?: Prisma.ContaCreateNestedManyWithoutUserInput
+  movimentos?: Prisma.MovimentoCreateNestedManyWithoutUserInput
+  operacoes?: Prisma.OperacaoCreateNestedManyWithoutUserInput
+  pernas?: Prisma.PernaOperacaoCreateNestedManyWithoutUserInput
+  freebets?: Prisma.FreebetCreateNestedManyWithoutUserInput
+  custos?: Prisma.CustoCreateNestedManyWithoutUserInput
+  chatMensagens?: Prisma.ChatMensagemCreateNestedManyWithoutAuthorInput
+}
+
+export type UserUncheckedCreateWithoutPasswordResetsInput = {
+  id?: string
+  email: string
+  senhaHash: string
+  nome: string
+  role?: string
+  status?: string
+  assinaturaAte?: Date | string | null
+  plano?: string | null
+  afiliadoId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
+  parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
+  casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
+  contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
+  movimentos?: Prisma.MovimentoUncheckedCreateNestedManyWithoutUserInput
+  operacoes?: Prisma.OperacaoUncheckedCreateNestedManyWithoutUserInput
+  pernas?: Prisma.PernaOperacaoUncheckedCreateNestedManyWithoutUserInput
+  freebets?: Prisma.FreebetUncheckedCreateNestedManyWithoutUserInput
+  custos?: Prisma.CustoUncheckedCreateNestedManyWithoutUserInput
+  chatMensagens?: Prisma.ChatMensagemUncheckedCreateNestedManyWithoutAuthorInput
+}
+
+export type UserCreateOrConnectWithoutPasswordResetsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPasswordResetsInput, Prisma.UserUncheckedCreateWithoutPasswordResetsInput>
+}
+
+export type UserUpsertWithoutPasswordResetsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPasswordResetsInput, Prisma.UserUncheckedUpdateWithoutPasswordResetsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPasswordResetsInput, Prisma.UserUncheckedCreateWithoutPasswordResetsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPasswordResetsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPasswordResetsInput, Prisma.UserUncheckedUpdateWithoutPasswordResetsInput>
+}
+
+export type UserUpdateWithoutPasswordResetsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  senhaHash?: Prisma.StringFieldUpdateOperationsInput | string
+  nome?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
+  parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
+  casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
+  contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
+  movimentos?: Prisma.MovimentoUpdateManyWithoutUserNestedInput
+  operacoes?: Prisma.OperacaoUpdateManyWithoutUserNestedInput
+  pernas?: Prisma.PernaOperacaoUpdateManyWithoutUserNestedInput
+  freebets?: Prisma.FreebetUpdateManyWithoutUserNestedInput
+  custos?: Prisma.CustoUpdateManyWithoutUserNestedInput
+  chatMensagens?: Prisma.ChatMensagemUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPasswordResetsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  senhaHash?: Prisma.StringFieldUpdateOperationsInput | string
+  nome?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  assinaturaAte?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  plano?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afiliadoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
@@ -867,6 +1008,7 @@ export type UserCreateWithoutAfiliadoInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
@@ -891,6 +1033,7 @@ export type UserUncheckedCreateWithoutAfiliadoInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
@@ -959,6 +1102,7 @@ export type UserCreateWithoutPagamentosInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -983,6 +1127,7 @@ export type UserUncheckedCreateWithoutPagamentosInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -1023,6 +1168,7 @@ export type UserUpdateWithoutPagamentosInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -1047,6 +1193,7 @@ export type UserUncheckedUpdateWithoutPagamentosInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -1071,6 +1218,7 @@ export type UserCreateWithoutParceirosInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -1095,6 +1243,7 @@ export type UserUncheckedCreateWithoutParceirosInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -1135,6 +1284,7 @@ export type UserUpdateWithoutParceirosInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -1159,6 +1309,7 @@ export type UserUncheckedUpdateWithoutParceirosInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -1183,6 +1334,7 @@ export type UserCreateWithoutCasasInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaCreateNestedManyWithoutUserInput
@@ -1207,6 +1359,7 @@ export type UserUncheckedCreateWithoutCasasInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   contas?: Prisma.ContaUncheckedCreateNestedManyWithoutUserInput
@@ -1247,6 +1400,7 @@ export type UserUpdateWithoutCasasInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUpdateManyWithoutUserNestedInput
@@ -1271,6 +1425,7 @@ export type UserUncheckedUpdateWithoutCasasInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   contas?: Prisma.ContaUncheckedUpdateManyWithoutUserNestedInput
@@ -1295,6 +1450,7 @@ export type UserCreateWithoutContasInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
@@ -1319,6 +1475,7 @@ export type UserUncheckedCreateWithoutContasInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
@@ -1359,6 +1516,7 @@ export type UserUpdateWithoutContasInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
@@ -1383,6 +1541,7 @@ export type UserUncheckedUpdateWithoutContasInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
@@ -1407,6 +1566,7 @@ export type UserCreateWithoutMovimentosInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
@@ -1431,6 +1591,7 @@ export type UserUncheckedCreateWithoutMovimentosInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
@@ -1471,6 +1632,7 @@ export type UserUpdateWithoutMovimentosInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
@@ -1495,6 +1657,7 @@ export type UserUncheckedUpdateWithoutMovimentosInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
@@ -1519,6 +1682,7 @@ export type UserCreateWithoutOperacoesInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
@@ -1543,6 +1707,7 @@ export type UserUncheckedCreateWithoutOperacoesInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
@@ -1583,6 +1748,7 @@ export type UserUpdateWithoutOperacoesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
@@ -1607,6 +1773,7 @@ export type UserUncheckedUpdateWithoutOperacoesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
@@ -1631,6 +1798,7 @@ export type UserCreateWithoutPernasInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
@@ -1655,6 +1823,7 @@ export type UserUncheckedCreateWithoutPernasInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
@@ -1695,6 +1864,7 @@ export type UserUpdateWithoutPernasInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
@@ -1719,6 +1889,7 @@ export type UserUncheckedUpdateWithoutPernasInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
@@ -1743,6 +1914,7 @@ export type UserCreateWithoutFreebetsInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
@@ -1767,6 +1939,7 @@ export type UserUncheckedCreateWithoutFreebetsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
@@ -1807,6 +1980,7 @@ export type UserUpdateWithoutFreebetsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
@@ -1831,6 +2005,7 @@ export type UserUncheckedUpdateWithoutFreebetsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
@@ -1855,6 +2030,7 @@ export type UserCreateWithoutCustosInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
@@ -1879,6 +2055,7 @@ export type UserUncheckedCreateWithoutCustosInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
@@ -1919,6 +2096,7 @@ export type UserUpdateWithoutCustosInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
@@ -1943,6 +2121,7 @@ export type UserUncheckedUpdateWithoutCustosInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
@@ -1967,6 +2146,7 @@ export type UserCreateWithoutChatMensagensInput = {
   updatedAt?: Date | string
   afiliado?: Prisma.AfiliadoCreateNestedOneWithoutClientesInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaCreateNestedManyWithoutUserInput
@@ -1991,6 +2171,7 @@ export type UserUncheckedCreateWithoutChatMensagensInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  passwordResets?: Prisma.PasswordResetUncheckedCreateNestedManyWithoutUserInput
   pagamentos?: Prisma.PagamentoUncheckedCreateNestedManyWithoutUserInput
   parceiros?: Prisma.ParceiroUncheckedCreateNestedManyWithoutUserInput
   casas?: Prisma.CasaUncheckedCreateNestedManyWithoutUserInput
@@ -2031,6 +2212,7 @@ export type UserUpdateWithoutChatMensagensInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   afiliado?: Prisma.AfiliadoUpdateOneWithoutClientesNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
@@ -2055,6 +2237,7 @@ export type UserUncheckedUpdateWithoutChatMensagensInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
@@ -2091,6 +2274,7 @@ export type UserUpdateWithoutAfiliadoInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUpdateManyWithoutUserNestedInput
@@ -2115,6 +2299,7 @@ export type UserUncheckedUpdateWithoutAfiliadoInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  passwordResets?: Prisma.PasswordResetUncheckedUpdateManyWithoutUserNestedInput
   pagamentos?: Prisma.PagamentoUncheckedUpdateManyWithoutUserNestedInput
   parceiros?: Prisma.ParceiroUncheckedUpdateManyWithoutUserNestedInput
   casas?: Prisma.CasaUncheckedUpdateManyWithoutUserNestedInput
@@ -2147,6 +2332,7 @@ export type UserUncheckedUpdateManyWithoutAfiliadoInput = {
 
 export type UserCountOutputType = {
   sessions: number
+  passwordResets: number
   pagamentos: number
   parceiros: number
   casas: number
@@ -2161,6 +2347,7 @@ export type UserCountOutputType = {
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | UserCountOutputTypeCountSessionsArgs
+  passwordResets?: boolean | UserCountOutputTypeCountPasswordResetsArgs
   pagamentos?: boolean | UserCountOutputTypeCountPagamentosArgs
   parceiros?: boolean | UserCountOutputTypeCountParceirosArgs
   casas?: boolean | UserCountOutputTypeCountCasasArgs
@@ -2188,6 +2375,13 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
  */
 export type UserCountOutputTypeCountSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.SessionWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPasswordResetsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PasswordResetWhereInput
 }
 
 /**
@@ -2275,6 +2469,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   updatedAt?: boolean
   afiliado?: boolean | Prisma.User$afiliadoArgs<ExtArgs>
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
+  passwordResets?: boolean | Prisma.User$passwordResetsArgs<ExtArgs>
   pagamentos?: boolean | Prisma.User$pagamentosArgs<ExtArgs>
   parceiros?: boolean | Prisma.User$parceirosArgs<ExtArgs>
   casas?: boolean | Prisma.User$casasArgs<ExtArgs>
@@ -2336,6 +2531,7 @@ export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = run
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   afiliado?: boolean | Prisma.User$afiliadoArgs<ExtArgs>
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
+  passwordResets?: boolean | Prisma.User$passwordResetsArgs<ExtArgs>
   pagamentos?: boolean | Prisma.User$pagamentosArgs<ExtArgs>
   parceiros?: boolean | Prisma.User$parceirosArgs<ExtArgs>
   casas?: boolean | Prisma.User$casasArgs<ExtArgs>
@@ -2360,6 +2556,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   objects: {
     afiliado: Prisma.$AfiliadoPayload<ExtArgs> | null
     sessions: Prisma.$SessionPayload<ExtArgs>[]
+    passwordResets: Prisma.$PasswordResetPayload<ExtArgs>[]
     pagamentos: Prisma.$PagamentoPayload<ExtArgs>[]
     parceiros: Prisma.$ParceiroPayload<ExtArgs>[]
     casas: Prisma.$CasaPayload<ExtArgs>[]
@@ -2779,6 +2976,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   readonly [Symbol.toStringTag]: "PrismaPromise"
   afiliado<T extends Prisma.User$afiliadoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$afiliadoArgs<ExtArgs>>): Prisma.Prisma__AfiliadoClient<runtime.Types.Result.GetResult<Prisma.$AfiliadoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   sessions<T extends Prisma.User$sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  passwordResets<T extends Prisma.User$passwordResetsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$passwordResetsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PasswordResetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   pagamentos<T extends Prisma.User$pagamentosArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pagamentosArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   parceiros<T extends Prisma.User$parceirosArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$parceirosArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ParceiroPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   casas<T extends Prisma.User$casasArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$casasArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CasaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -3270,6 +3468,30 @@ export type User$sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.SessionScalarFieldEnum | Prisma.SessionScalarFieldEnum[]
+}
+
+/**
+ * User.passwordResets
+ */
+export type User$passwordResetsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PasswordReset
+   */
+  select?: Prisma.PasswordResetSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PasswordReset
+   */
+  omit?: Prisma.PasswordResetOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PasswordResetInclude<ExtArgs> | null
+  where?: Prisma.PasswordResetWhereInput
+  orderBy?: Prisma.PasswordResetOrderByWithRelationInput | Prisma.PasswordResetOrderByWithRelationInput[]
+  cursor?: Prisma.PasswordResetWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PasswordResetScalarFieldEnum | Prisma.PasswordResetScalarFieldEnum[]
 }
 
 /**

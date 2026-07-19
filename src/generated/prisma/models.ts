@@ -10,6 +10,7 @@
  */
 export type * from './models/User'
 export type * from './models/Session'
+export type * from './models/PasswordReset'
 export type * from './models/Afiliado'
 export type * from './models/Pagamento'
 export type * from './models/Parceiro'

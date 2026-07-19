@@ -33,6 +33,7 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   sessions     Session[]
+  passwordResets PasswordReset[]
   pagamentos   Pagamento[]
 
   // Todos os dados do produto pertencem a um usuário (isolamento multi-tenant).
@@ -55,6 +56,22 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Link de redefinição de senha ("esqueci minha senha"). Guardamos o HASH do
+// token (nunca o token cru), com prazo curto e marca de uso — um link vale uma
+// vez só e expira. A senha só muda quando a pessoa clica e define a nova, então
+// pedir reset do e-mail de outro não tranca ninguém.
+model PasswordReset {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([userId])
 }

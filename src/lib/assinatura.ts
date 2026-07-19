@@ -143,9 +143,16 @@ export async function processarPagamentoAsaas(payment: Payment): Promise<{ statu
     await enviarEmail(
       email,
       "Bem-vindo ao ApexMonitor — seus dados de acesso",
-      `Olá, ${nome}!\n\nSua assinatura do ApexMonitor está ativa.\n\n` +
-        `Acesse: https://apexmonitor.com.br/login\nE-mail: ${email}\nSenha: ${senhaGerada}\n\n` +
-        `Troque a senha no primeiro acesso.\n\nBoas operações!`,
+      `Olá, ${nome}!\n\nSua assinatura do ApexMonitor está ativa. 🎉\n\n` +
+        `SEUS DADOS DE ACESSO\n` +
+        `• Site:  https://apexmonitor.com.br/login\n` +
+        `• Login: ${email}   (é o seu e-mail)\n` +
+        `• Senha: ${senhaGerada}\n\n` +
+        `POR SEGURANÇA, TROQUE A SENHA\n` +
+        `Assim que entrar, vá em Conta → Segurança e defina uma senha sua.\n` +
+        `Prefere não guardar essa senha? Use "Esqueci minha senha" na tela de\n` +
+        `login (https://apexmonitor.com.br/esqueci-senha) e crie uma nova.\n\n` +
+        `Boas operações!\n— Equipe ApexMonitor`,
     );
   }
 
