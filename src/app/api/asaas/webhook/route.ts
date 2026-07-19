@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { EVENTOS_PAGO, webhookTokenValido } from "@/lib/asaas";
-import { processarPagamentoAsaas } from "@/lib/assinatura";
+import { EVENTOS_ESTORNO, EVENTOS_PAGO, webhookTokenValido } from "@/lib/asaas";
+import { processarPagamentoAsaas, reverterPagamentoAsaas } from "@/lib/assinatura";
 
 export const dynamic = "force-dynamic";
 
@@ -22,15 +22,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "corpo invalido" }, { status: 400 });
   }
 
-  // 2. Só nos importam eventos de pagamento efetivado. Os demais respondemos
-  // 200 pra o Asaas não reenviar — ignorar de propósito não é erro.
-  if (!evento.event || !EVENTOS_PAGO.has(evento.event) || !evento.payment) {
-    return NextResponse.json({ ok: true, ignorado: evento.event ?? "sem-evento" });
+  // 2. Roteia por tipo de evento. Sempre responde 200 se não lançar — senão o
+  // Asaas fica reenviando. Os handlers tratam e logam erros, não propagam.
+  const nome = evento.event ?? "";
+
+  // Pagamento entrou → cria/acha o cliente, estende o acesso, registra.
+  if (evento.payment && EVENTOS_PAGO.has(nome)) {
+    const r = await processarPagamentoAsaas(evento.payment);
+    return NextResponse.json({ ok: true, ...r });
   }
 
-  // 3. Processa: cria/acha o cliente, estende o acesso, registra o pagamento.
-  // Sempre responde 200 se não lançar — senão o Asaas fica reenviando. Erros
-  // são tratados dentro de processarPagamentoAsaas e logados, não propagados.
-  const r = await processarPagamentoAsaas(evento.payment);
-  return NextResponse.json({ ok: true, ...r });
+  // Estorno/chargeback → retira o acesso que aquele pagamento concedeu.
+  if (evento.payment && EVENTOS_ESTORNO.has(nome)) {
+    const r = await reverterPagamentoAsaas(evento.payment);
+    return NextResponse.json({ ok: true, ...r });
+  }
+
+  // Qualquer outro evento: ignorar de propósito não é erro.
+  return NextResponse.json({ ok: true, ignorado: nome || "sem-evento" });
 }

@@ -159,6 +159,47 @@ export async function processarPagamentoAsaas(payment: Payment): Promise<{ statu
   return { status: senhaGerada ? "conta-criada" : "renovado" };
 }
 
+/**
+ * Reverte um pagamento estornado/chargeback: tira do cliente os dias que aquele
+ * pagamento havia concedido e marca o Pagamento como estornado (some dos
+ * relatórios de comissão — afiliado não recebe por venda que voltou).
+ *
+ * Idempotente e atômico: o `updateMany` com guarda `estornadoEm: null` garante
+ * que só a primeira entrega do evento subtrai os dias; reentregas não revogam
+ * duas vezes. Nunca lança (o webhook precisa responder 200).
+ */
+export async function reverterPagamentoAsaas(payment: Payment): Promise<{ status: string }> {
+  const asaasId = String(payment.id ?? "");
+  if (!asaasId) return { status: "sem-id" };
+
+  const pag = await prisma.pagamento.findUnique({
+    where: { asaasId },
+    include: { user: { select: { id: true, assinaturaAte: true } } },
+  });
+  // Nunca vimos esse pagamento (ex.: estorno de algo que não liberou acesso).
+  if (!pag) return { status: "sem-pagamento" };
+  if (pag.estornadoEm) return { status: "ja-estornado" };
+
+  const status = await prisma.$transaction(async (tx) => {
+    // Guarda atômica: só quem consegue marcar (count=1) subtrai os dias.
+    const marcado = await tx.pagamento.updateMany({
+      where: { id: pag.id, estornadoEm: null },
+      data: { estornadoEm: new Date() },
+    });
+    if (marcado.count === 0) return "ja-estornado";
+
+    if (pag.user.assinaturaAte) {
+      // Tira exatamente os dias que este pagamento deu. Se sobrar tempo de outro
+      // pagamento válido, o cliente mantém; se não, o acesso cai.
+      const novo = new Date(pag.user.assinaturaAte.getTime() - pag.meses * 30 * 86_400_000);
+      await tx.user.update({ where: { id: pag.userId }, data: { assinaturaAte: novo } });
+    }
+    return "estornado";
+  });
+
+  return { status };
+}
+
 // Ciclo do Asaas por plano (cartão recorrente). O Pix é avulso, não usa isto.
 const CICLO_ASAAS: Record<string, string> = {
   mensal: "MONTHLY",

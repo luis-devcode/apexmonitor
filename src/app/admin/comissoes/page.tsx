@@ -13,7 +13,8 @@ export default async function ComissoesPage() {
 
   // Todos os pagamentos que geraram comissão, com o afiliado e o cliente.
   const pagamentos = await prisma.pagamento.findMany({
-    where: { afiliadoId: { not: null }, comissaoValor: { gt: 0 } },
+    // Estornado não gera comissão: sai do relatório.
+    where: { afiliadoId: { not: null }, comissaoValor: { gt: 0 }, estornadoEm: null },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

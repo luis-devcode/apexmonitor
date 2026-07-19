@@ -118,6 +118,10 @@ model Pagamento {
   comissaoPaga  Boolean   @default(false)
   // Quando o repasse foi feito ao afiliado (null = ainda devendo).
   comissaoPagaEm DateTime?
+  // Estorno/chargeback: quando o pagamento foi revertido. Enquanto null, o
+  // pagamento vale (concede acesso e gera comissão). Preenchido, o acesso que
+  // ele deu é retirado e a comissão sai dos relatórios.
+  estornadoEm   DateTime?
   createdAt     DateTime  @default(now())
 
   @@index([userId])

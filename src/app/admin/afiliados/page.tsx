@@ -16,8 +16,9 @@ export default async function AfiliadosPage() {
     include: {
       _count: { select: { clientes: true } },
       // Comissão já registrada mas ainda não repassada — é o que você deve a ele.
+      // Estornado não conta (o afiliado não recebe por venda que voltou).
       pagamentos: {
-        where: { comissaoPaga: false },
+        where: { comissaoPaga: false, estornadoEm: null },
         select: { comissaoValor: true },
       },
     },

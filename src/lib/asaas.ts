@@ -68,3 +68,14 @@ export async function asaasFetch(
 
 /** Eventos do Asaas que liberam acesso (pagamento entrou). */
 export const EVENTOS_PAGO = new Set(["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"]);
+
+/**
+ * Eventos em que o dinheiro VOLTA pro cliente (estorno, reversão de Pix,
+ * chargeback aberto). O acesso que aquele pagamento concedeu tem que ser
+ * retirado — senão a pessoa dá chargeback e continua usando de graça.
+ */
+export const EVENTOS_ESTORNO = new Set([
+  "PAYMENT_REFUNDED",
+  "PAYMENT_REVERSED",
+  "PAYMENT_CHARGEBACK_REQUESTED",
+]);
