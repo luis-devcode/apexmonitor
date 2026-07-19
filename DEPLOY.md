@@ -11,17 +11,19 @@ App e coletor compartilham a pasta de dados do coletor.
 
 ## Pré-requisitos (você contrata)
 
-- **VPS** com Ubuntu 22.04+ — Hetzner **CX23** (2 vCPU / 4 GB / 40 GB), Falkenstein
-  ou Nuremberg. ~€6/mês (com IPv4), preço fixo, cobrança por hora, sem contrato.
-  Escolhido porque só cabia pagamento **mensal**: a Hostinger São Paulo custava
-  R$80/mês recorrente contra ~R$39 aqui. Não pegue Ashburn — lá a linha CX não
-  existe, só CPX a €19,49.
-- **Cloudflare** (plano grátis) na frente — **não é opcional nesta arquitetura.**
-  O servidor está na Alemanha: 200ms de São Paulo. A Cloudflare tem ponto em São
-  Paulo e termina o handshake TCP+TLS lá (~10ms), que é o que custa 3 viagens.
-  Sem ela, a primeira abertura passa de 1s; com ela, ~350ms.
-- **Migração futura:** quando houver cliente pagante, mover pra um VPS em São Paulo
-  (~10ms) é reproduzir este documento noutra máquina. Nada aqui prende a Hetzner.
+- **VPS** com Ubuntu 24.04 — **Locaweb VPS 4 GB Linux** (2 vCPU / 4 GB / 70 GB NVMe),
+  datacenter Ascenty em **São Paulo**. R$89,90/mês, mensal sem fidelidade. IP público
+  `191.252.101.180`. Acesso: `ssh -i ~/.ssh/apexmonitor_sp root@191.252.101.180`.
+  > **Histórico:** até 2026-07-19 rodava num Hetzner **CX23** na Alemanha (~€6/mês).
+  > Migrou pra São Paulo porque a distância (200ms) deixava o site lento — em SP a
+  > origem fica a ~10ms do usuário (TTFB caiu de ~0.35s pra ~0.15s). A migração foi
+  > reproduzir este documento na máquina nova + `pg_dump`/restore; nada prendia à
+  > Hetzner. Se um dia trocar de novo, o roteiro é o mesmo.
+- **Cloudflare** (plano grátis) na frente — proxy ligado (nuvem laranja), SSL em
+  **Full (strict)**. Com a origem já em São Paulo o ganho de latência do handshake é
+  pequeno, mas a Cloudflare segue valendo por três coisas: **cache dos estáticos** na
+  borda, o **Origin Certificate** (Passo 7) e o **firewall** que restringe 80/443 às
+  faixas dela, escondendo o IP da origem.
 - **Domínio** — `apexmonitor.com.br` ✅ já registrado (registro.br).
 - **Repositório privado no GitHub** ✅ `luis-devcode/apexmonitor` (é de onde o servidor baixa).
 
@@ -33,7 +35,15 @@ App e coletor compartilham a pasta de dados do coletor.
 # como root no VPS
 apt update && apt upgrade -y
 curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt install -y nodejs
-apt install -y postgresql git
+apt install -y git jq
+```
+
+**Postgres 18** — o padrão do Ubuntu 24.04 é o 16, mas o banco usa a 18. Restaurar um
+dump da 18 numa 16 quebra, então instale a 18 pelo repositório oficial (PGDG):
+```bash
+apt install -y postgresql-common
+/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y   # adiciona o repo PGDG
+apt install -y postgresql-18
 ```
 
 **Caddy** não está nos repositórios do Ubuntu — precisa do repositório oficial antes:
@@ -262,19 +272,46 @@ systemctl enable --now apexmonitor apexmonitor-coletor
 
 ## Passo 7 — HTTPS e domínio (Caddy)
 
-`/etc/caddy/Caddyfile`:
+O HTTPS **não** usa mais Let's Encrypt automático. Como o site fica atrás do proxy da
+Cloudflare em **Full (strict)**, o certificado da origem é um **Cloudflare Origin
+Certificate** (só a Cloudflare confia nele, vale **15 anos, sem renovação**). Isso
+também é o que permite migrar de servidor **sem downtime**: o Caddy do servidor novo
+já tem um certificado válido antes de o DNS apontar pra ele — não existe a corrida do
+desafio ACME (que falharia enquanto o DNS ainda aponta pro servidor velho).
+
+Gerar o Origin cert (a chave privada nunca sai do servidor):
+```bash
+# 1) chave + CSR no servidor
+openssl req -new -newkey rsa:2048 -nodes \
+  -keyout /etc/caddy/cf-origin.key -out /tmp/apex.csr \
+  -subj "/CN=apexmonitor.com.br" \
+  -addext "subjectAltName=DNS:apexmonitor.com.br,DNS:www.apexmonitor.com.br"
+chmod 600 /etc/caddy/cf-origin.key; chown caddy:caddy /etc/caddy/cf-origin.key
+```
+2) Painel Cloudflare → **SSL/TLS → Origin Server → Create Certificate**, cole o CSR
+   (ou via API `POST /certificates` com `request_type: origin-rsa`,
+   `requested_validity: 5475`). Salve o certificado retornado em
+   `/etc/caddy/cf-origin.pem` (`chown caddy:caddy`, `chmod 644`).
+
+`/etc/caddy/Caddyfile` (os dois blocos de site usam o Origin cert):
 ```
 apexmonitor.com.br {
-    reverse_proxy localhost:3000
+    tls /etc/caddy/cf-origin.pem /etc/caddy/cf-origin.key
+    reverse_proxy 127.0.0.1:3000
 }
 ```
 ```bash
+caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile   # OK se validar
 systemctl reload caddy
 ```
-Aponte o DNS do domínio (registro A) para o IP do VPS. O Caddy emite o certificado
-HTTPS sozinho.
+> O `caddy validate` avisa `stapling OCSP ... no URL to issuing certificate` — é
+> **esperado** com Origin cert (a Cloudflare não publica OCSP pra ele). Não é erro.
 
 ### ⚠️ DNSSEC — desligue ANTES de trocar os nameservers
+
+> ✅ **Já feito** quando a Cloudflare entrou (16/07/2026). A migração pra SP **não**
+> mexeu em nameserver (a Cloudflare continua sendo o DNS; só trocamos o registro A da
+> origem). Esta seção só volta a importar se um dia trocar de provedor de DNS.
 
 Domínio `.com.br` novo **nasce com DNSSEC ligado**: enquanto o DNS é do registro.br,
 eles assinam a zona automaticamente e publicam o DS. Não existe botão de "desligar"
@@ -294,55 +331,44 @@ dig +short DS SEU_DOMINIO @a.dns.br
 dig +short DS SEU_DOMINIO @8.8.8.8
 ```
 
-### Ordem do Caddy e da Cloudflare
+### Ordem da virada de DNS (com Origin cert, sem corrida de ACME)
 
-**Só recarregue o Caddy depois que o DNS resolver para o IP do VPS.** Com o domínio
-apontando para o lugar errado, ele falha a validação em loop e queima a cota de
-tentativas do Let's Encrypt — o mesmo erro do coletor, com o certificado no lugar.
+Com o Origin cert já instalado no Caddy, o servidor novo apresenta HTTPS válido
+**antes** de receber tráfego. Então dá pra testar por fora sem tocar no DNS e virar
+com o proxy sempre ligado:
 
-Suba o DNS **sem o proxy** (nuvem cinza), deixe o Caddy emitir o certificado, e só
-então ligue o proxy (nuvem laranja) com SSL em **Full (strict)**. É o proxy que traz
-o ganho de latência para o Brasil (handshake em São Paulo + cache dos estáticos).
+```bash
+# testa a origem nova por fora, forçando o IP (‑k porque o Origin cert só a Cloudflare valida)
+curl -k --resolve apexmonitor.com.br:443:IP_NOVO https://apexmonitor.com.br/login -o /dev/null -w '%{http_code}\n'
+```
+Passando 200, troque o **registro A** (apex + www) pro IP novo na Cloudflare
+(mantendo proxied/nuvem laranja). Não precisa de nuvem cinza nem de esperar ACME.
 
-### Proxy da Cloudflare — ✅ ligado em 16/07/2026
+### Cloudflare — proxy ligado (16/07/2026) e por que continua
 
-Medido do Brasil, a mesma página pelos dois caminhos:
+Foi o proxy que trouxe o site de ~720 ms (direto na Alemanha) pra ~350 ms quando a
+origem ainda era lá. **Com a origem agora em São Paulo o TTFB é ~150 ms** e o ganho
+do handshake pela borda ficou pequeno — mas o proxy segue ligado por três motivos que
+não dependem de distância:
 
-| | Direto (Alemanha) | Pela Cloudflare |
-|---|---|---|
-| Conexão | 180 ms | **50 ms** |
-| TLS | 360 ms | **84 ms** |
-| **Total** | **720 ms** | **350 ms** |
-
-O ganho está no **handshake**, não em cache: TCP+TLS custam ~3 idas-e-voltas, e
-terminá-las no Brasil elimina ~600 ms antes do primeiro byte.
-
-O que foi feito, além de virar as nuvens:
-
-1. **SSL em Full (strict).** `Flexible` daria loop de redirecionamento (a Cloudflare
-   fala HTTP, o Caddy manda pro HTTPS, repete) — e, se funcionasse, os dados iriam
-   **abertos** entre São Paulo e Nuremberg com o cadeado aparecendo para o cliente.
+1. **SSL em Full (strict) + Origin cert.** `Flexible` daria loop de redirecionamento e
+   mandaria os dados **abertos** entre a Cloudflare e a origem. Full (strict) exige um
+   certificado válido e confiável na origem — que é exatamente o Origin cert.
 2. **`trusted_proxies` no Caddy** com as faixas de `cloudflare.com/ips-v4` e
    `/ips-v6`, mais `client_ip_headers CF-Connecting-IP`. Sem isto todo visitante
    chega com o IP da Cloudflare: os logs viram inúteis e qualquer limite por IP
    puniria todos juntos.
 3. **Firewall: 80/443 só das faixas da Cloudflare.** Sem isto, quem descobrisse
-   `167.233.36.36` contornaria a Cloudflare e o ganho de proteção evaporaria.
+   `191.252.101.180` contornaria a Cloudflare e o ganho de proteção evaporaria.
    **A porta 22 fica aberta** — é o único caminho para consertar um erro no próprio
    firewall.
 
-> ⚠️ **Renovação do certificado.** O Caddy renova pela porta 80, que agora só aceita
-> a Cloudflare. O desafio chega proxiado e deve funcionar — mas o Caddy **não falha**
-> quando não consegue renovar: ele segue com o certificado velho até vencer e
-> derrubar o site. O `OnFailure` não pega isso.
->
-> Por isso existe `apexmonitor-cert-check.timer` (segundas, 09:00): lê o certificado
-> **no disco** (pela rede se veria o da Cloudflare, não o nosso) e manda e-mail se
-> faltarem menos de 20 dias.
->
-> **Plano B se a renovação falhar:** trocar o Let's Encrypt por um **Origin
-> Certificate da Cloudflare** — vale 15 anos e não precisa de renovação. Só é
-> possível porque, com o proxy ligado, a Cloudflare é a única que fala com a origem.
+> ✅ **Certificado: sem renovação.** O Origin cert vale **15 anos** (até 2041), então
+> não há a corrida de renovação que o Let's Encrypt tinha. O
+> `apexmonitor-cert-check.timer` (segundas, 09:00) foi **repontado** pra ler
+> `/etc/caddy/cf-origin.pem` e continua alertando se faltarem menos de 20 dias — na
+> prática, silencioso pelos próximos ~15 anos. Se um dia trocar o Origin cert, é só
+> repetir o CSR acima e substituir o `.pem`.
 
 ## Passo 8 — Criar seu administrador
 
@@ -378,7 +404,8 @@ generate + db push → **build** → restart, e termina conferindo se `/login` r
 ## Pós-lançamento
 
 - **Backup do Postgres** — ✅ feito, em duas camadas. `apexmonitor-backup.timer`
-  roda 03:30 UTC (00:30 BRT) e chama `/usr/local/bin/apexmonitor-backup`:
+  roda **03:30** (o `OnCalendar` é sem timezone = hora local; o VPS de SP está em
+  `-03`, então 03:30 BRT) e chama `/usr/local/bin/apexmonitor-backup`:
 
   | Camada | Onde | Retenção | Serve para |
   |---|---|---|---|
@@ -407,9 +434,12 @@ Restaure sempre num banco descartável primeiro; só depois aponte o app para el
 > **Duas armadilhas achadas na configuração:**
 > - **O rclone do apt é de 2022** (v1.60) e o R2 responde `501 Not Implemented` no
 >   upload. Instale o atual: `curl https://rclone.org/install.sh | bash`.
-> - **O servidor fala com a Cloudflare por IPv6.** O filtro de IP do token R2 tem
->   que incluir o **IPv6** (`2a01:4f8:1c18:b7f3::/64`), não só o IPv4 — só com o
->   IPv4 o backup falha em silêncio, todo dia.
+> - **O filtro de IP do token R2 tem que bater com o IP de saída do servidor.** Na
+>   Alemanha a saída era **IPv6** (`2a01:4f8:1c18:b7f3::/64`); o VPS de SP (Locaweb)
+>   **não tem IPv6**, então o token precisa liberar o **IPv4 `191.252.101.180/32`**.
+>   Se o IP não bater, o backup dá `403 AccessDenied` e falha em silêncio, todo dia.
+>   (Trocar o filtro de IP no painel **não muda a chave** do token — o rclone segue
+>   funcionando sem reconfigurar.)
 
 - **Alerta de falha por e-mail** — ✅ feito, para `luisfilipemarchini21@hotmail.com`.
 
@@ -419,8 +449,10 @@ Restaure sempre num banco descartável primeiro; só depois aponte o app para el
   junta as últimas 25 linhas do journal e manda pela **API HTTP do Resend**
   (grátis: 3.000/mês). Chave em `/root/.resend_key` (600).
 
-  > **Por que API HTTP e não SMTP:** a Hetzner bloqueia as portas 25 e 465 por ~1
-  > mês em conta nova. A 443 não — então o `curl` passa e o problema some.
+  > **Por que API HTTP e não SMTP:** na Hetzner as portas 25/465 vinham bloqueadas
+  > ~1 mês em conta nova; a 443 (HTTP) não, então o `curl` sempre passa. Independe do
+  > provedor — a API HTTP é mais simples e robusta que SMTP de qualquer forma, então
+  > seguimos com ela na Locaweb também.
   >
   > **Por que `onboarding@resend.dev` e não `@apexmonitor.com.br`:** enviar pelo
   > domínio exigiria verificá-lo no Resend e **trocar o `v=spf1 -all`**, que hoje
