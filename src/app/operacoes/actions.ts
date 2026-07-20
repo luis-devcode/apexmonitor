@@ -165,9 +165,12 @@ export async function criarOperacaoAction(
       });
 
       if (freebetId) {
+        // Assim que a extração entra na planilha, a freebet já sai de "disponível"
+        // e vira EXTRAIDA. O valor REAL que ela rendeu só é fechado na finalização
+        // (é o lucro da operação); aqui fica sem valorExtraido ainda.
         const { count } = await tx.freebet.updateMany({
           where: { id: freebetId, userId, status: "PENDENTE", usoOperacaoId: null },
-          data: { usoOperacaoId: operacao.id },
+          data: { usoOperacaoId: operacao.id, status: "EXTRAIDA" },
         });
         if (count !== 1) throw new Error(FREEBET_INDISPONIVEL);
       }
@@ -466,10 +469,11 @@ export async function finalizarOperacaoAction(
       data: { status: "FINALIZADA", lucroReal, liquidadaEm: new Date() },
     });
 
-    // Era uma extração: a freebet virou dinheiro. O que ela rendeu de verdade é
-    // o lucro da operação — agora sim ela sai da lista de disponíveis.
+    // Era uma extração: a freebet já saiu de "disponível" na criação da operação.
+    // Ao finalizar, fechamos o valor REAL que ela rendeu (o lucro da operação).
+    // Casa por usoOperacaoId (sem filtrar status, já que ela está EXTRAIDA).
     await tx.freebet.updateMany({
-      where: { userId, usoOperacaoId: operacao.id, status: "PENDENTE" },
+      where: { userId, usoOperacaoId: operacao.id },
       data: { status: "EXTRAIDA", valorExtraido: Math.max(0, lucroReal) },
     });
 
