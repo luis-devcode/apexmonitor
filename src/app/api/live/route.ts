@@ -1,11 +1,20 @@
 import { apiUser } from "@/lib/auth";
 import { feedHealth, readFeed } from "@/lib/odds-feed";
+import { abrirConexao, fecharConexao } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  if (!(await apiUser())) return new Response("nao autorizado", { status: 401 });
+  const user = await apiUser();
+  if (!user) return new Response("nao autorizado", { status: 401 });
+
+  // Teto de conexões SSE simultâneas por usuário: um cliente legítimo mantém
+  // poucas; abrir dezenas em paralelo (raspagem/DoS) bate no limite.
+  const chaveConexao = `live:${user.id}`;
+  if (!abrirConexao(chaveConexao, 20)) return new Response("muitas conexoes", { status: 429 });
+  let liberado = false;
+  const soltar = () => { if (!liberado) { liberado = true; fecharConexao(chaveConexao); } };
 
   const encoder = new TextEncoder();
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -18,6 +27,7 @@ export async function GET(request: Request) {
         if (closed) return;
         closed = true;
         if (timer) clearInterval(timer);
+        soltar();
         try { controller.close(); } catch { /* já fechado */ }
       };
       const safeEnqueue = (text: string) => {
@@ -28,6 +38,7 @@ export async function GET(request: Request) {
           // cliente já desconectou: encerra de vez, sem lançar
           closed = true;
           if (timer) clearInterval(timer);
+          soltar();
         }
       };
 
@@ -58,6 +69,7 @@ export async function GET(request: Request) {
     cancel() {
       closed = true;
       if (timer) clearInterval(timer);
+      soltar();
     },
   });
 

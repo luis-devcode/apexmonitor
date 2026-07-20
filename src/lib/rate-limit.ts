@@ -46,6 +46,40 @@ export function registrar(chave: string): void {
   store.set(chave, hits);
 }
 
+/**
+ * Consome uma cota: checa E registra numa tacada só. Para APIs onde TODA
+ * requisição conta (diferente do login, onde só a falha conta). Retorna se
+ * passou e, se bloqueou, em quantos segundos libera.
+ */
+export function consumir(chave: string, max: number, janelaMs: number): { ok: boolean; emSegundos?: number } {
+  const bloq = excedeu(chave, max, janelaMs);
+  if (bloq) return { ok: false, emSegundos: bloq };
+  registrar(chave);
+  return { ok: true };
+}
+
+/* ---------------------------------------------------------------------------
+ * Conexões simultâneas (ex.: SSE do /api/live). Um cliente legítimo mantém
+ * poucas conexões abertas; um raspador que multiplexa dezenas em paralelo bate
+ * no teto. Contador em memória: abre no connect, fecha no disconnect.
+ * ------------------------------------------------------------------------- */
+const conexoes = new Map<string, number>();
+
+/** Tenta abrir uma conexão. Retorna false se já está no teto. */
+export function abrirConexao(chave: string, max: number): boolean {
+  const n = conexoes.get(chave) ?? 0;
+  if (n >= max) return false;
+  conexoes.set(chave, n + 1);
+  return true;
+}
+
+/** Fecha uma conexão (sempre chamar no disconnect, mesmo em erro). */
+export function fecharConexao(chave: string): void {
+  const n = (conexoes.get(chave) ?? 1) - 1;
+  if (n <= 0) conexoes.delete(chave);
+  else conexoes.set(chave, n);
+}
+
 /** IP real do cliente (atrás da Cloudflare/Caddy). Falha fechada num rótulo fixo. */
 export async function ipCliente(): Promise<string> {
   const h = await headers();

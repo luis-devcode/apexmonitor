@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth";
+import { consumir } from "@/lib/rate-limit";
 import {
   feedHealth,
   matchLogoFor,
@@ -32,7 +33,13 @@ function lev(a: string, b: string): number {
 
 /** Todas as odds 1X2 (todas as casas, com e sem PA) de um jogo específico. */
 export async function GET(request: Request) {
-  if (!(await apiUser())) return NextResponse.json({ error: "nao autorizado" }, { status: 401 });
+  const user = await apiUser();
+  if (!user) return NextResponse.json({ error: "nao autorizado" }, { status: 401 });
+
+  // O detalhe é consultado ~1×/5s por jogo aberto. 150/min por usuário cobre
+  // vários jogos ao mesmo tempo e barra varredura automatizada de todos.
+  const rl = consumir(`api:match:${user.id}`, 150, 60_000);
+  if (!rl.ok) return NextResponse.json({ error: "muitas requisicoes" }, { status: 429, headers: { "Retry-After": String(rl.emSegundos ?? 60) } });
 
   const id = new URL(request.url).searchParams.get("id") ?? "";
   if (!id) return NextResponse.json({ error: "missing id" }, { status: 400 });

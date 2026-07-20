@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth";
+import { consumir } from "@/lib/rate-limit";
 import {
   feedHealth,
   listBookmakers,
@@ -20,7 +21,16 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   // As odds são o produto: sem assinatura em dia, não sai nada daqui.
-  if (!(await apiUser())) return NextResponse.json({ error: "nao autorizado" }, { status: 401 });
+  const user = await apiUser();
+  if (!user) return NextResponse.json({ error: "nao autorizado" }, { status: 401 });
+
+  // Anti-raspagem: o app legítimo busca ~1×/s por aba aberta. 400/min por usuário
+  // dá folga pra várias abas e ainda barra scripts que puxam o feed em rajada.
+  const rl = consumir(`api:markets:${user.id}`, 400, 60_000);
+  if (!rl.ok) {
+    console.warn(`[rate] /api/markets bloqueado p/ user ${user.id}`);
+    return NextResponse.json({ error: "muitas requisicoes" }, { status: 429, headers: { "Retry-After": String(rl.emSegundos ?? 60) } });
+  }
 
   const params = new URL(request.url).searchParams;
   const mode = params.get("mode") || "dashboard";
