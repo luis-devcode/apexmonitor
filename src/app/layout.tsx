@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import CookiePreferences from "@/components/CookiePreferences";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +20,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {children}
+        <CookiePreferences />
+      </body>
     </html>
   );
 }
