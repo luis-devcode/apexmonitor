@@ -60,8 +60,8 @@ const supportsLay = (house: string) => {
 };
 
 
-function emptyRow(i: number): Row {
-  return { house: "", isLay: false, odd: "2.00", comm: "0", aumento: "0", cashback: "0", cbType: "%", stake: "500", freebet: false, dist: true, fixed: i === 0 };
+function emptyRow(): Row {
+  return { house: "", isLay: false, odd: "2.00", comm: "0", aumento: "0", cashback: "0", cbType: "%", stake: "500", freebet: false, dist: true, fixed: false };
 }
 
 /** Coeficientes de retorno (M) e risco (F) de uma perna, iguais ao motor original. */
@@ -163,7 +163,7 @@ export default function SurebetCalculator({ seed, selection, className = "", var
   const compact = false;
   const toggleKeys: (keyof Toggles)[] = ["comissoes", "aumento", "cashback", "arredondar"];
   const TOGGLE_LABELS: Record<keyof Toggles, string> = { comissoes: "Comissões", aumento: "Aumento %", cashback: "Cashback", arredondar: "Arredondar" };
-  const [rows, setRows] = useState<Row[]>(() => Array.from({ length: MAX }, (_, i) => emptyRow(i)));
+  const [rows, setRows] = useState<Row[]>(() => Array.from({ length: MAX }, () => emptyRow()));
   const [numHouses, setNumHouses] = useState(2);
   const [toggles, setToggles] = useState<Toggles>({ comissoes: false, aumento: false, cashback: false, arredondar: false });
   const [total, setTotal] = useState("1000");
@@ -242,7 +242,7 @@ export default function SurebetCalculator({ seed, selection, className = "", var
       const next = prev.map((h, i) => {
         if (i >= n) return h;
         const r = seed.rows[i];
-        return { ...emptyRow(i), odd: r?.odd ? r.odd.toFixed(2) : "2.00", house: r?.house ?? "", label: r?.label };
+        return { ...emptyRow(), odd: r?.odd ? r.odd.toFixed(2) : "2.00", house: r?.house ?? "", label: r?.label };
       });
       return resolve(next, toggles, seed.total ? String(seed.total) : "1000", n);
     });
@@ -348,7 +348,7 @@ export default function SurebetCalculator({ seed, selection, className = "", var
   };
 
   const clearCalculator = () => {
-    setRows(Array.from({ length: MAX }, (_, i) => emptyRow(i)));
+    setRows(Array.from({ length: MAX }, () => emptyRow()));
     setNumHouses(2);
     setToggles({ comissoes: false, aumento: false, cashback: false, arredondar: false });
     setTotal("1000");
@@ -449,9 +449,8 @@ export default function SurebetCalculator({ seed, selection, className = "", var
                 <LiveNumberInput
                   value={risk.toFixed(2)}
                   onChange={changeTotal}
-                  readOnly={anyFixed}
-                  title="Soma real dos valores arriscados nesta operação"
-                  className={`w-full bg-transparent text-lg font-black tabular-nums outline-none ${anyFixed ? "text-text-2" : ""}`}
+                  title="Edite o investimento total para redistribuir as stakes"
+                  className="w-full bg-transparent text-lg font-black tabular-nums outline-none"
                 />
               </div>
             </div>
@@ -577,9 +576,8 @@ export default function SurebetCalculator({ seed, selection, className = "", var
                 <LiveNumberInput
                   value={risk.toFixed(2)}
                   onChange={changeTotal}
-                  readOnly={anyFixed}
-                  title="Soma real dos valores arriscados nesta operação"
-                  className={`${inputCls} border-accent/20 bg-surface font-black ${anyFixed ? "opacity-70" : ""}`}
+                  title="Edite o investimento total para redistribuir as stakes"
+                  className={`${inputCls} border-accent/20 bg-surface font-black`}
                 />
               </td>
               <td className={`border-b border-accent/20 px-3 py-4 text-lg font-black tabular-nums ${roi > 0.01 ? "text-positive" : roi < -0.01 ? "text-negative" : "text-text-2"}`}>{roi.toFixed(2)}%</td>
