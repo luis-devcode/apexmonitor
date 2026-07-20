@@ -200,19 +200,15 @@ export async function reverterPagamentoAsaas(payment: Payment): Promise<{ status
   return { status };
 }
 
-// Ciclo do Asaas por plano (cartão recorrente). O Pix é avulso, não usa isto.
-const CICLO_ASAAS: Record<string, string> = {
-  mensal: "MONTHLY",
-  trimestral: "QUARTERLY",
-  anual: "YEARLY",
-};
-
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
 
 /**
  * Cria um checkout hospedado no Asaas e devolve o link pra onde redirecionar o
- * cliente. Cartão → assinatura RECORRENTE (debita sozinho a cada ciclo). Pix →
- * cobrança AVULSA (DETACHED) do período (renova manualmente depois).
+ * cliente. Só o MENSAL no cartão é RECORRENTE (debita sozinho todo mês).
+ * Trimestral e anual — e o mensal no Pix — são cobrança AVULSA (DETACHED): paga
+ * o período de uma vez e renova manualmente depois. Assim o único fluxo
+ * recorrente é o mensal, onde cada cobrança concede sempre 1 mês (sem risco de
+ * a renovação de cartão creditar meses errados).
  *
  * O Asaas coleta nome/CPF/endereço na página dele — por isso não mandamos
  * customerData. Para renovação de logado, o e-mail vai na externalReference.
@@ -252,16 +248,19 @@ export async function criarCheckoutAsaas(opts: {
     externalReference: ref,
   };
 
-  if (opts.metodo === "CARTAO") {
+  // Só o mensal no cartão renova sozinho; trimestral/anual (e mensal no Pix) são
+  // cobrança única.
+  const recorrente = plano.id === "mensal" && opts.metodo === "CARTAO";
+  if (recorrente) {
     body.billingTypes = ["CREDIT_CARD"];
     body.chargeTypes = ["RECURRENT"];
     body.subscription = {
-      cycle: CICLO_ASAAS[plano.id],
+      cycle: "MONTHLY",
       nextDueDate: ymd(hoje),
       endDate: ymd(new Date(hoje.getTime() + 5 * 365 * 86_400_000)), // ~5 anos = "indefinido"
     };
   } else {
-    body.billingTypes = ["PIX"];
+    body.billingTypes = opts.metodo === "CARTAO" ? ["CREDIT_CARD"] : ["PIX"];
     body.chargeTypes = ["DETACHED"];
   }
 
