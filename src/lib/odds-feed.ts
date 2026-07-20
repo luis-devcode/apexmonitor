@@ -71,7 +71,7 @@ export type MatchLogoMap = Record<string, MatchLogo>;
 const FEED_PATH = path.join(
   process.cwd(),
   "integrations",
-  "monitorodds",
+  "nucleo",
   "data",
   "odds.json",
 );
@@ -79,7 +79,7 @@ const FEED_PATH = path.join(
 const MATCH_LOGOS_PATH = path.join(
   process.cwd(),
   "integrations",
-  "monitorodds",
+  "nucleo",
   "data",
   "match-logos.json",
 );
@@ -87,7 +87,7 @@ const MATCH_LOGOS_PATH = path.join(
 const SUPER_ODDS_PATH = path.join(
   process.cwd(),
   "integrations",
-  "monitorodds",
+  "nucleo",
   "data",
   "super-odds.json",
 );
@@ -168,7 +168,7 @@ export function fixtureKey(match: Match) {
 }
 
 /**
- * Jogo já começou? O MonitorOdds só tem odds de PRÉ-JOGO — depois do apito
+ * Jogo já começou? A fonte só tem odds de PRÉ-JOGO — depois do apito
  * inicial as odds param e o que sobra é lixo velho (gera surebet falsa). Então
  * qualquer jogo cujo horário de início já passou é descartado.
  */
@@ -230,7 +230,7 @@ export type CloneHouse = {
 const CLONES_PATH = path.join(
   process.cwd(),
   "integrations",
-  "monitorodds",
+  "nucleo",
   "data",
   "bookmaker-groups.json",
 );

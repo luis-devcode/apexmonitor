@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "dev:all": "node scripts/dev-all.mjs",
-    "collector": "npm --prefix integrations/monitorodds run collect",
-    "collector:test": "npm --prefix integrations/monitorodds run collect:test",
+    "nucleo": "npm --prefix integrations/nucleo run collect",
+    "nucleo:test": "npm --prefix integrations/nucleo run collect:test",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

@@ -8,7 +8,7 @@ const npm = win ? "npm.cmd" : "npm";
 const opts = { stdio: "inherit", shell: win };
 const children = [
   spawn(npm, ["run", "dev"], opts),
-  spawn(npm, ["--prefix", "integrations/monitorodds", "run", "collect"], opts),
+  spawn(npm, ["--prefix", "integrations/nucleo", "run", "collect"], opts),
 ];
 
 let stopping = false;

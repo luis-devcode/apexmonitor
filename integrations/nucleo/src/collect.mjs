@@ -1,5 +1,5 @@
 /**
- * Coletor do feed MonitorOdds → Central de Odds (uso autorizado).
+ * Núcleo de dados → Central de Odds (uso autorizado da fonte).
  *
  * Fluxo (tudo por HTTP, sem navegador):
  *   login → cookie/token → GET /api/enc-key (chave AES) → SSE /api/ds
@@ -15,9 +15,9 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import process from "node:process";
 
-const BASE = "https://app.monitorodds.com.br";
-const EMAIL = process.env.MO_EMAIL;
-const PASS = process.env.MO_PASS;
+const BASE = process.env.NUCLEO_URL;
+const EMAIL = process.env.NUCLEO_EMAIL;
+const PASS = process.env.NUCLEO_PASS;
 const WRITE_MS = Number(process.env.WRITE_INTERVAL_MS) || 1000;
 const AUX_MS = Number(process.env.AUX_INTERVAL_MS) || 5000;
 const ONCE_MS = Number(process.argv.find((arg) => arg.startsWith("--once="))?.split("=")[1]) || 0;
@@ -67,8 +67,8 @@ async function sweepStaleTmp() {
   } catch {}
 }
 
-if (!EMAIL || !PASS) {
-  console.error("Defina MO_EMAIL e MO_PASS no .env.");
+if (!BASE || !EMAIL || !PASS) {
+  console.error("Defina NUCLEO_URL, NUCLEO_EMAIL e NUCLEO_PASS no .env.");
   process.exit(1);
 }
 
@@ -229,7 +229,7 @@ function applyDelta(d) {
 let dirty = true;
 
 /**
- * Faxina: remove da memória os jogos que já começaram. O MonitorOdds só tem
+ * Faxina: remove da memória os jogos que já começaram. A fonte só tem
  * odds de pré-jogo, então jogo iniciado vira lixo (incha o arquivo e gera
  * surebet falsa). Como o estado é reconstruído a cada snapshot e só cresce por
  * deltas, sem isso os jogos finalizados se acumulariam indefinidamente.
@@ -412,7 +412,7 @@ if (ONCE_MS > 0) {
   setTimeout(() => { stopped = true; activeController?.abort(); }, ONCE_MS);
 }
 
-console.log(`Coletor MonitorOdds → ${OUT} (escreve a cada ${WRITE_MS}ms).`);
+console.log(`Núcleo → ${OUT} (escreve a cada ${WRITE_MS}ms).`);
 await sweepStaleTmp();
 await loadExistingFeed();
 while (!stopped) {

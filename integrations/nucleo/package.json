@@ -1,0 +1,10 @@
+{
+  "name": "nucleo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "collect": "node --env-file-if-exists=.env src/collect.mjs",
+    "collect:test": "node --env-file-if-exists=.env src/collect.mjs --once=12000"
+  }
+}

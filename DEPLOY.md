@@ -2,10 +2,10 @@
 
 Guia para colocar o ApexMonitor no ar num **VPS** (servidor sempre-ligado). Um
 VPS é necessário — não um host serverless (Vercel/Netlify/Lovable) — porque o
-**coletor** precisa rodar 24h e dividir o disco com o app.
+**núcleo** precisa rodar 24h e dividir o disco com o app.
 
-Arquitetura: **um VPS** rodando (1) Postgres, (2) o app Next.js, (3) o coletor.
-App e coletor compartilham a pasta de dados do coletor.
+Arquitetura: **um VPS** rodando (1) Postgres, (2) o app Next.js, (3) o núcleo.
+App e núcleo compartilham a pasta de dados do núcleo.
 
 ---
 
@@ -123,10 +123,10 @@ Preencha o `.env` (veja `.env.example`):
 - `ADMIN_SETUP_TOKEN` → gere com `openssl rand -hex 16`
 - `GEMINI_API_KEY` → a sua chave
 
-E o `.env` do coletor:
+E o `.env` do núcleo:
 ```bash
-cp integrations/monitorodds/.env.example integrations/monitorodds/.env
-nano integrations/monitorodds/.env   # MO_EMAIL, MO_PASS
+cp integrations/nucleo/.env.example integrations/nucleo/.env
+nano integrations/nucleo/.env   # NUCLEO_EMAIL, NUCLEO_PASS
 ```
 
 ## Passo 4 — Migrar o Prisma de SQLite → Postgres
@@ -181,7 +181,7 @@ export DATABASE_URL="$(grep '^DATABASE_URL=' .env | cut -d= -f2- | sed 's/^"//;s
 npm run build
 ```
 
-## Passo 6 — Rodar app e coletor como serviços (sempre-ligados)
+## Passo 6 — Rodar app e núcleo como serviços (sempre-ligados)
 
 **Não rode como root.** O app fica exposto na internet e guarda CPF e senha de casa
 de aposta; se uma dependência do Node tiver uma falha de execução remota, root é a
@@ -190,7 +190,7 @@ diferença entre "invadiram o app" e "invadiram o servidor".
 ```bash
 useradd --system --home-dir /opt/apexmonitor --shell /usr/sbin/nologin apexmonitor
 chown -R apexmonitor:apexmonitor /opt/apexmonitor
-chmod 600 /opt/apexmonitor/.env /opt/apexmonitor/integrations/monitorodds/.env
+chmod 600 /opt/apexmonitor/.env /opt/apexmonitor/integrations/nucleo/.env
 ```
 
 Crie `/etc/systemd/system/apexmonitor.service`:
@@ -224,8 +224,8 @@ ReadWritePaths=/opt/apexmonitor
 WantedBy=multi-user.target
 ```
 
-Crie `/etc/systemd/system/apexmonitor-coletor.service` igual, com
-`WorkingDirectory=/opt/apexmonitor/integrations/monitorodds` e
+Crie `/etc/systemd/system/apexmonitor-nucleo.service` igual, com
+`WorkingDirectory=/opt/apexmonitor/integrations/nucleo` e
 `ExecStart=/usr/bin/node --env-file-if-exists=.env src/collect.mjs`.
 
 ### ⚠️ `KillSignal=SIGKILL` — por que, e o que custa
@@ -254,20 +254,20 @@ servidor, isto precisa ser revisto.
 **O outro custo:** `SuccessExitStatus=SIGKILL` também faz um kill por OOM parecer
 sucesso. Com 4 GB e swap, é improvável — mas é um alerta a menos.
 
-> **Teste o login do MonitorOdds ANTES de habilitar o coletor.** Com credencial
-> inválida ele tenta autenticar a cada 5s e o MonitorOdds bloqueia o IP por 30
+> **Teste o login da fonte ANTES de habilitar o núcleo.** Com credencial
+> inválida ele tenta autenticar a cada 5s e a fonte bloqueia o IP por 30
 > minutos — e `Restart=always` faz isso sozinho, indefinidamente:
 > ```bash
-> cd /opt/apexmonitor/integrations/monitorodds
-> node --env-file=.env -e 'fetch("https://app.monitorodds.com.br/api/auth/login",{
+> cd /opt/apexmonitor/integrations/nucleo
+> node --env-file=.env -e 'fetch(process.env.NUCLEO_URL + "/api/auth/login",{
 >   method:"POST",headers:{"Content-Type":"application/json"},
->   body:JSON.stringify({email:process.env.MO_EMAIL,password:process.env.MO_PASS})
+>   body:JSON.stringify({email:process.env.NUCLEO_EMAIL,password:process.env.NUCLEO_PASS})
 > }).then(r=>console.log(r.status))'   # tem que ser 200
 > ```
 
 ```bash
 systemctl daemon-reload
-systemctl enable --now apexmonitor apexmonitor-coletor
+systemctl enable --now apexmonitor apexmonitor-nucleo
 ```
 
 ## Passo 7 — HTTPS e domínio (Caddy)
@@ -445,7 +445,7 @@ Restaure sempre num banco descartável primeiro; só depois aponte o app para el
 
   O systemd chama `apexmonitor-alerta@%N.service` via `OnFailure=` (drop-in em
   `/etc/systemd/system/<unit>.service.d/alerta.conf`) em **três** serviços:
-  `apexmonitor-backup`, `apexmonitor` (o site) e `apexmonitor-coletor`. O script
+  `apexmonitor-backup`, `apexmonitor` (o site) e `apexmonitor-nucleo`. O script
   junta as últimas 25 linhas do journal e manda pela **API HTTP do Resend**
   (grátis: 3.000/mês). Chave em `/root/.resend_key` (600).
 
@@ -462,14 +462,14 @@ Restaure sempre num banco descartável primeiro; só depois aponte o app para el
   > **Use `%N`, não `%n`**, no `OnFailure`: `%n` já inclui o sufixo e vira
   > `nome.service.service` — o alerta nunca dispara e nada indica o porquê.
 
-  **O que isto NÃO cobre:** serviço lento (mas vivo), coletor autenticando e
+  **O que isto NÃO cobre:** serviço lento (mas vivo), núcleo autenticando e
   trazendo dado velho, e a queda do servidor inteiro (não sobra quem mande o
   e-mail). Isso pede monitoramento externo — vale quando houver cliente pagante.
-- **Nunca** exponha o repositório publicamente (a pasta `integrations/monitorodds`
-  revela a fonte dos dados).
-- **Antes de virar público:** renomear a pasta `integrations/monitorodds` para um
-  nome neutro (ficou de fora do dev pra não quebrar o coletor rodando; é um passo
-  de última hora, com o serviço parado).
+- **Fonte de dados blindada** (2026-07-20): a pasta é neutra (`integrations/nucleo`),
+  as credenciais e a **URL da fonte** vivem só no `.env` do servidor
+  (`NUCLEO_URL`/`NUCLEO_EMAIL`/`NUCLEO_PASS`) — o código commitado **não** cita a
+  fonte. Mesmo assim, mantenha o **repositório privado**: um concorrente que
+  comparasse os feeds ainda poderia inferir a origem.
 
 ## Webhook do Asaas (assinaturas)
 
@@ -512,12 +512,12 @@ carrega `meses`, `cupom` e (em renovação de logado) o `email` da conta.
 
 ## Sobre a fonte de dados
 
-O uso do feed do MonitorOdds está **liberado pelo dono** — não é pendência.
+O uso do feed da fonte está **liberado pelo dono** — não é pendência.
 
 A dependência operacional, porém, é real: em 16/07/2026 a senha compartilhada mudou
-sem aviso e derrubou o coletor em produção. Quando isso acontecer de novo, o sintoma
-é `login falhou (401)` no `journalctl -u apexmonitor-coletor`; conserto é atualizar
-`MO_PASS` em `integrations/monitorodds/.env` e reiniciar o serviço.
+sem aviso e derrubou o núcleo em produção. Quando isso acontecer de novo, o sintoma
+é `login falhou (401)` no `journalctl -u apexmonitor-nucleo`; conserto é atualizar
+`NUCLEO_PASS` em `integrations/nucleo/.env` e reiniciar o serviço.
 
 O plano de longo prazo é uma **API de odds própria**, que remove essa dependência (e
 torna desnecessário esconder o vínculo com a fonte). Sem data.
