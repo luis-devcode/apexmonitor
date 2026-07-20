@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { asaasFetch } from "@/lib/asaas";
+import { reverterPagamentoAsaas } from "@/lib/assinatura";
 import { getCurrentUser, hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -72,6 +74,35 @@ export async function estenderAcessoAction(formData: FormData): Promise<void> {
     where: { id: userId },
     data: { assinaturaAte: fim(dias, alvo.assinaturaAte) },
   });
+  revalidatePath("/admin");
+}
+
+/**
+ * Estorna um pagamento pelo Asaas (devolve o dinheiro ao cliente) e retira o
+ * acesso que ele concedeu. Vale para cartão e Pix. Idempotente: o webhook
+ * PAYMENT_REFUNDED que o Asaas dispara depois reforça sem duplicar.
+ */
+export async function estornarPagamentoAction(formData: FormData): Promise<void> {
+  if (await exigirAdmin()) return;
+
+  const pagamentoId = String(formData.get("pagamentoId") ?? "");
+  if (!pagamentoId) return;
+
+  const pag = await prisma.pagamento.findUnique({
+    where: { id: pagamentoId },
+    select: { asaasId: true, estornadoEm: true },
+  });
+  // Só dá pra estornar pagamento do Asaas ainda não estornado.
+  if (!pag || pag.estornadoEm || !pag.asaasId) return;
+
+  // 1) Pede o estorno ao Asaas.
+  const r = await asaasFetch(`/payments/${pag.asaasId}/refund`, { method: "POST" });
+  if (!r.ok) {
+    console.error(`[admin] estorno Asaas falhou p/ ${pag.asaasId} (${r.status})`);
+    return;
+  }
+  // 2) Retira o acesso já (o webhook reforça, idempotente).
+  await reverterPagamentoAsaas({ id: pag.asaasId });
   revalidatePath("/admin");
 }
 

@@ -25,6 +25,10 @@ export default async function AdminPage() {
       assinaturaAte: true,
       createdAt: true,
       afiliado: { select: { nome: true, cupom: true } },
+      pagamentos: {
+        orderBy: { createdAt: "desc" },
+        select: { id: true, valor: true, meses: true, metodo: true, asaasId: true, estornadoEm: true, createdAt: true },
+      },
     },
   });
 
@@ -38,6 +42,15 @@ export default async function AdminPage() {
     ativa: !!c.assinaturaAte && c.assinaturaAte.getTime() > agora && c.status !== "BLOQUEADO",
     criadoEm: c.createdAt.toISOString(),
     afiliado: c.afiliado ? `${c.afiliado.nome} (${c.afiliado.cupom})` : null,
+    pagamentos: c.pagamentos.map((p) => ({
+      id: p.id,
+      valor: p.valor,
+      meses: p.meses,
+      metodo: p.metodo,
+      temAsaas: !!p.asaasId,
+      estornado: !!p.estornadoEm,
+      data: p.createdAt.toISOString(),
+    })),
   }));
 
   const ativos = lista.filter((c) => c.ativa).length;

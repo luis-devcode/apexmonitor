@@ -1,5 +1,6 @@
 "use server";
 
+import { excedeu, ipCliente, registrar } from "@/lib/rate-limit";
 import { pedirResetSenha } from "@/lib/reset-senha";
 
 // Resposta SEMPRE igual, exista ou não a conta — assim ninguém descobre quem é
@@ -14,6 +15,16 @@ export async function pedirResetAction(_prev: ResetView, formData: FormData): Pr
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { ok: false, msg: "Informe um e-mail válido." };
   }
+
+  // Throttle: por IP (não spammar vários e-mails) e por e-mail alvo (não lotar a
+  // caixa de uma vítima). Se bloqueado, responde o MESMO genérico sem enviar —
+  // não revela o limite nem se a conta existe.
+  const ip = await ipCliente();
+  const bloq = excedeu(`reset:ip:${ip}`, 6, 60 * 60_000) ?? excedeu(`reset:email:${email}`, 4, 60 * 60_000);
+  if (bloq) return { ok: true, msg: GENERICA };
+  registrar(`reset:ip:${ip}`);
+  registrar(`reset:email:${email}`);
+
   await pedirResetSenha(email);
   return { ok: true, msg: GENERICA };
 }

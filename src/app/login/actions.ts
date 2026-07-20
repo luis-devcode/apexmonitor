@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createSession, destroySession, hashPassword, semUsuarios, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { excedeu, ipCliente, registrar } from "@/lib/rate-limit";
 
 /** Entrar no sistema. */
 export async function loginAction(
@@ -14,9 +15,19 @@ export async function loginAction(
 
   if (!email || !senha) return "Informe email e senha.";
 
+  // Trava de força-bruta: por IP e pelo e-mail alvo. Só as FALHAS contam, então
+  // quem acerta a senha nunca é penalizado.
+  const ip = await ipCliente();
+  const bloq = excedeu(`login:ip:${ip}`, 10, 15 * 60_000) ?? excedeu(`login:email:${email}`, 6, 15 * 60_000);
+  if (bloq) return `Muitas tentativas. Aguarde ${Math.ceil(bloq / 60)} min e tente novamente.`;
+
   const user = await prisma.user.findUnique({ where: { email } });
   // Mensagem genérica de propósito: não revelamos se o email existe.
-  if (!user || !verifyPassword(senha, user.senhaHash)) return "Email ou senha incorretos.";
+  if (!user || !verifyPassword(senha, user.senhaHash)) {
+    registrar(`login:ip:${ip}`);
+    registrar(`login:email:${email}`);
+    return "Email ou senha incorretos.";
+  }
   if (user.status === "BLOQUEADO") return "Seu acesso está bloqueado. Fale com o suporte.";
 
   await createSession(user.id);
